@@ -1,0 +1,83 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct Transazione{
+    char ipMittente[16];
+    int portaMittente;
+    int credito;
+    char ipDestinatario[16];
+    int portaDestinatario;
+    int numRandom;
+} transazione;
+
+typedef struct Blocco{
+    int n;
+    int tempo;
+    struct Transazione ts;
+    struct Blocco *next;
+} blocco;
+
+void inserimentoCoda(blocco temp, blocco *genesi);
+blocco* getBlocco(int i, int size, blocco* genesi);
+void stampaLista(blocco* genesi);
+
+void inserimentoCoda(blocco temp, blocco *genesi)
+{
+    blocco *bl = malloc(sizeof(blocco));
+    blocco *coda = malloc(sizeof(blocco));
+    coda = genesi;
+    *bl = temp;
+    bl->next = NULL;
+
+    while(coda->next != NULL)
+        coda = coda->next;
+
+    coda->next = bl;
+   
+}
+
+blocco* getBlocco(int i, int size, blocco* genesi)
+{
+    blocco* temp = genesi;
+    int j;
+
+    if(i>size)
+    {
+        printf("Stai cercando un nodo con indice superiore al size, nodo non presente\n");
+        temp->n = -1;
+        return temp;
+    }
+
+    for(j = 0; j<i; j++)
+        temp = temp->next;
+
+    return temp;
+}
+
+void stampaLista(blocco* genesi)
+{
+    blocco *temp = malloc(sizeof(blocco));
+    temp = genesi;
+
+    while(temp != NULL)
+    {
+        printf("n = %d\n", temp->n);
+        temp = temp->next;
+    }
+
+    free(temp);
+}
+
+// transazione getTransazione(int id)
+// {
+//     blocco* temp = genesi->next;
+//     int i;
+
+//     for(i = 0; i<size; i++)
+//     {
+//         if(temp->ts.numRandom != id)
+//             temp = temp->next;
+//         else
+//             return temp->ts;        
+//     }
+// }
