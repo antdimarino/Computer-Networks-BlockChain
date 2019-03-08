@@ -45,8 +45,7 @@ blocco* getBlocco(int i, blocco* genesi)
     {
         if(temp->next == NULL)
         {
-            temp->n = -1;
-            return temp;
+            return NULL;
         }
         temp = temp->next;
     }
