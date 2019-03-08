@@ -144,9 +144,8 @@ void *produci(void* arg)
         prodotto.ts.portaDestinatatio = 1024 + rand()%64512;
         prodotto.ts.credito = 1 + rand()%1000000;
         prodotto.ts.numRandom = 1 + rand()%999999;        
-        snprintf(prodotto.ts.ipMittente, 16, "%03d.%03d.%03d.%03d", rand()%256, rand()%256, rand()%256, rand()%256);
-        snprintf(prodotto.ts.ipDestinatario, 16, "%03d.%03d.%03d.%03d", rand()%256, rand()%256, rand()%256, rand()%256);
-
+        snprintf(prodotto.ts.ipMittente, 16, "%d.%d.%d.%d", rand()%256, rand()%256, rand()%256, rand()%256);
+        snprintf(prodotto.ts.ipDestinatario, 16, "%d.%d.%d.%d", rand()%256, rand()%256, rand()%256, rand()%256);
         sleep(prodotto.tempo);
         inserimentoCoda(prodotto, genesi);
     }
