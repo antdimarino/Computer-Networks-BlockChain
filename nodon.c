@@ -18,7 +18,7 @@ mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
 blocco* genesi;
 int size;
 pthread_mutex_t *mutex = PTHREAD_MUTEX_INITIALIZER;
-sem_t *sem;
+sem_t *disp;
 
 void *produci(void *arg);
 
@@ -58,8 +58,8 @@ int main(int argc, char* argv[])
         exit(1);
     }
 
-    sem_unlink("semaforo");
-    if ( (sem = sem_open("semaforo", O_CREAT | O_EXCL, mode, 0)) == SEM_FAILED)
+    sem_unlink("disp");
+    if ( (disp = sem_open("disp", O_CREAT | O_EXCL, mode, 0)) == SEM_FAILED)
     {
         perror("inizializzazione semaforo fallita\n");
         exit(1);
@@ -99,26 +99,39 @@ int main(int argc, char* argv[])
         FullRead(conn_fd, &indice, sizeof(int));
         printf("NODON: il BlockServer ha richiesto i blocchi dall'ultimo indice %d\n", indice);
 
-        bl = getBlocco(indice, size, genesi);
-
+        if( (bl = getBlocco(indice, genesi) == NULL)
+	{
+         printf("NODON: L'ultimo blocco che il BlockServer dice di possedere, non esiste.\n");
+         close(conn_fd);
+         continue;                //ATTENZIONE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! DA VERIVICARE IN POSSESSO DEL BLOCKSERVER!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	}
+       
         while(1)
-        {
-            pthread_mutex_lock(mutex);
-            if(indice == size)
+        {   
+            if(indice < numBlocchi) //Se il blocco da inviare al blockserver si trovava nel file
             {
-                //sincronizzati con il thread
-                sem_wait(&semaforo);
-                //aspetta che il nuovo blocco venga creato
-            }  
-            pthread_mutex_unlock(mutex); 
-
-            bl = bl->next; 
-            sleep(bl->tempo);
+               bl = bl->next; 
+		//allora si aspetta il tempo prima di inviare il blocco
+               sleep(bl->tempo);
+            }
+            else
+            { //altrimenti se il blocco deve essere creato , allora l'attesa verra' fatta prima di inserire il nuovo blocco nella Blockchain.
+              pthread_mutex_lock(mutex);
+              if(indice == size)
+              {
+		  pthread_mutex_unlock(mutex);
+                  //si attende che il thread crei un nuovo nodo e lo inserisca nella Blockchain...
+                  sem_wait(&disp);
+              }
+              else
+                  pthread_mutex_unlock(mutex); 
+	      bl = bl->next;
+            }
             FullWrite(conn_fd, &bl, sizeof(blocco));
             indice++;   
 
             if( read(conn_fd, &check, sizeof(int)) == 0 ) 
-            {
+            {   //SE il server ha interrotto la comunicazione si torna indietro.
                 close(conn_fd);
                 break;
             }
@@ -126,27 +139,49 @@ int main(int argc, char* argv[])
 
     }
 
-    sem_unlink("semaforo");
-    sem_close(sem);
+    sem_unlink("disp");
+    sem_close(disp);
     return 0;
 }
 
 void *produci(void* arg)
 {
     blocco prodotto;
-
+    int semVal=1;
+    int inizio=1;
+    time_t temp=time(NULL); 
+    snprintf(prodotto.ts.ipMittente, 16, "%d.%d.%d.%d", rand()%256, rand()%256, rand()%256, rand()%256);
+    prodotto.ts.portaMittente = 1024 + rand()%64512;
+    snprintf(prodotto.ts.ipDestinatario, 16, "%d.%d.%d.%d", rand()%256, rand()%256, rand()%256, rand()%256);
+    prodotto.ts.portaDestinatatio = 1024 + rand()%64512;	
     while(1)
     {
+        pthread_mutex_lock(mutex);
         prodotto.n = size+1;
         prodotto.tempo = 5 + rand()%11;
         prodotto.next = NULL;
-        prodotto.ts.portaMittente = 1024 + rand()%64512;
-        prodotto.ts.portaDestinatatio = 1024 + rand()%64512;
+        if((time(NULL)-temp) > 20)
+        {
+          temp=time(NULL);
+          if((rand()%100)<50)
+          {
+	    snprintf(prodotto.ts.ipMittente, 16, "%d.%d.%d.%d", rand()%256, rand()%256, rand()%256, rand()%256);
+            prodotto.ts.portaMittente = 1024 + rand()%64512;	
+          }
+          else
+          {
+            snprintf(prodotto.ts.ipDestinatario, 16, "%d.%d.%d.%d", rand()%256, rand()%256, rand()%256, rand()%256);
+            prodotto.ts.portaDestinatatio = 1024 + rand()%64512;
+          }
+	}
         prodotto.ts.credito = 1 + rand()%1000000;
         prodotto.ts.numRandom = 1 + rand()%999999;        
-        snprintf(prodotto.ts.ipMittente, 16, "%d.%d.%d.%d", rand()%256, rand()%256, rand()%256, rand()%256);
-        snprintf(prodotto.ts.ipDestinatario, 16, "%d.%d.%d.%d", rand()%256, rand()%256, rand()%256, rand()%256);
         sleep(prodotto.tempo);
         inserimentoCoda(prodotto, genesi);
+        size++;
+        pthread_mutex_unlock(mutex);
+        sem_getvalue(disp,&semVal);
+        if(semVal==0)
+          sem_post(disp);
     }
 }
