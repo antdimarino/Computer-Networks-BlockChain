@@ -18,7 +18,7 @@ typedef struct Blocco{
 } blocco;
 
 void inserimentoCoda(blocco temp, blocco *genesi);
-blocco* getBlocco(int i, int size, blocco* genesi);
+blocco* getBlocco(int i, blocco* genesi);
 void stampaLista(blocco* genesi);
 
 void inserimentoCoda(blocco temp, blocco *genesi)
@@ -36,20 +36,20 @@ void inserimentoCoda(blocco temp, blocco *genesi)
    
 }
 
-blocco* getBlocco(int i, int size, blocco* genesi)
+blocco* getBlocco(int i, blocco* genesi)
 {
     blocco* temp = genesi;
     int j;
 
-    if(i>size)
-    {
-        printf("Stai cercando un nodo con indice superiore al size, nodo non presente\n");
-        temp->n = -1;
-        return temp;
-    }
-
     for(j = 0; j<i; j++)
+    {
+        if(temp->next == NULL)
+        {
+            temp->n = -1;
+            return temp;
+        }
         temp = temp->next;
+    }
 
     return temp;
 }
@@ -58,6 +58,8 @@ void stampaLista(blocco* genesi)
 {
     blocco *temp = malloc(sizeof(blocco));
     temp = genesi;
+
+    printf("STAMPA LISTA\n");
 
     while(temp != NULL)
     {
