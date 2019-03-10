@@ -7,6 +7,7 @@ blocco* genesi;
 int size = 0;
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 sem_t *disp;
+int bloccato = 0;
 
 void *produci(void *arg);
 
@@ -27,6 +28,13 @@ int main(int argc, char* argv[])
     int nread = 0;
     pthread_t tid;
 
+    sem_unlink("disp");
+    if ( (disp = sem_open("disp", O_CREAT | O_EXCL, mode, 0)) == SEM_FAILED)
+    {
+        perror("inizializzazione semaforo fallita\n");
+        exit(1);
+    }
+
 
     //INIZIALIZZAZIONE NODON
     size = 0;
@@ -46,13 +54,6 @@ int main(int argc, char* argv[])
     if( (fstat(file, &sb)) < 0)
     {
         perror("fstat error\n");
-        exit(1);
-    }
-
-    sem_unlink("disp");
-    if ( (disp = sem_open("disp", O_CREAT | O_EXCL, mode, 0)) == SEM_FAILED)
-    {
-        perror("inizializzazione semaforo fallita\n");
         exit(1);
     }
     
@@ -82,8 +83,11 @@ int main(int argc, char* argv[])
     Bind(socket, (struct sockaddr *) &serv_add, sizeof(serv_add));
     Listen(socket, 1);
 
+
+
     while(1)
     {
+        printf("NODON: Mi metto in attesa di una nuova connessione\n");
         conn_fd = Accept(socket, NULL, NULL);
 
         printf("NODON: Connessione accettata\n");
@@ -99,8 +103,10 @@ int main(int argc, char* argv[])
        
         while(1)
         {   
+
             if(indice < numBlocchi) //Se il blocco da inviare al blockserver si trovava nel file
             {
+                printf("NODON: Voglio ricevere i blocchi dal file\n");
                 bl = bl->next; 
 		        //allora si aspetta il tempo prima di inviare il blocco
                 sleep(bl->tempo);
@@ -110,26 +116,34 @@ int main(int argc, char* argv[])
                 pthread_mutex_lock(&mutex);
                 if(indice == size)
                 {
-                    pthread_mutex_unlock(&mutex);
                     //si attende che il thread crei un nuovo nodo e lo inserisca nella Blockchain...
+                    bloccato = 1;
+                    pthread_mutex_unlock(&mutex);
                     sem_wait(disp);
                 }
                 else
                     pthread_mutex_unlock(&mutex); 
+
 	            bl = bl->next;
             }
-            FullWrite(conn_fd, &bl, sizeof(blocco));
-            indice++;   
+            t.n = bl->n;
+            t.tempo = bl->tempo;
+            t.ts = bl->ts;
+
+            FullWrite(conn_fd, &t, sizeof(struct temp));
+            printf("NODON: blocco inviato numero: %d\ttempo: %d\n\n", t.n, t.tempo);
+            indice++;
+
 
             nread = read(conn_fd, &check, sizeof(int));
-            if(  check == 0 || nread == 0 ) 
+            if(  check != 1 || nread == 0 ) 
             {  
                  //SE il server ha interrotto la comunicazione si torna indietro.
+                printf("NODON: Il BlockServer ha interrotto la connessione!\n");
                 close(conn_fd);
                 break;
-            }
+            }  
         }
-
     }
 
     sem_close(disp);
@@ -159,6 +173,7 @@ void *produci(void* arg)
     {
         t.n = size+1;
         t.tempo = 5 + rand()%11;
+
         if( (time(NULL)-temp) > 20 )
         {
             temp=time(NULL);
@@ -173,17 +188,28 @@ void *produci(void* arg)
                 t.ts.portaDestinatario = 1024 + rand()%64512;
             }
 	    }
+
         t.ts.credito = 1 + rand()%1000000;
         t.ts.numRandom = 1 + rand()%999999;
-        pthread_mutex_lock(&mutex);        
+
         sleep(t.tempo);
+
+        pthread_mutex_lock(&mutex); 
+
         inserimentoCoda(t, genesi);
         size++;
         FullWrite(file, &t, sizeof(struct temp));
-        pthread_mutex_unlock(&mutex);
-        sem_getvalue(disp,&semVal);
-        if(semVal==0)
+        printf("THREAD NODON: Blocco creato ed inserito n: %d\n\n", t.n);
+
+        if(bloccato == 1)
+        {
+            bloccato = 0;
+            pthread_mutex_unlock(&mutex);
             sem_post(disp);
-        printf("THREAD NODON: Blocco creato ed inserito\n");
+            printf("THREAD NODON: Ho svegliato il padre\n\n");
+        }
+        else
+            pthread_mutex_unlock(&mutex);
+        
     }
 }
