@@ -15,16 +15,17 @@
 #include "Lista.h"
 mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
 
+struct temp t;
 blocco* genesi;
 int size;
-pthread_mutex_t *mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 sem_t *disp;
 
 void *produci(void *arg);
 
 int main(int argc, char* argv[])
 {
-    int file numBlocchi, i;
+    int file, numBlocchi, i;
     struct stat sb;
     blocco temp;
 
@@ -35,6 +36,7 @@ int main(int argc, char* argv[])
     blocco* bl;
     int diff;
     int check;
+    int nread = 0;
     pthread_t tid;
 
 
@@ -51,7 +53,7 @@ int main(int argc, char* argv[])
     serv_add.sin_addr.s_addr = htonl(INADDR_ANY);
     serv_add.sin_port        = htons(1025);
 
-    file = open("blocchi_nodon.txt", O_CREAT | O_RWONLY, mode);
+    file = open("blocchi_nodon.txt", O_CREAT | O_RDWR, mode);
     if( (fstat(file, &sb)) < 0)
     {
         perror("Fstat error\n");
@@ -69,18 +71,19 @@ int main(int argc, char* argv[])
 
     for(i = 0; i<numBlocchi; i++)
     {
-        read(file, &temp, sizeof(blocco));
+        read(file, &t, sizeof(struct temp));
         inserimentoCoda(temp, genesi);
         size++;
     }
 
+    close(file);
     printf("NODON: BlockChain Caricata\n");
     stampaLista(genesi);        
 
     //NODON PRONTO PER LAVORARE A PIENO REGIME
 
     //CREAZIONE THREAD CHE GENERA LA BLOCKCHAIN
-    if( (pthread_create(&tid, NULL, produci, NULL) < 0)
+    if( (pthread_create(&tid, NULL, produci, NULL)) < 0) 
     {
         perror("could not create thread");
         return 1;
@@ -89,49 +92,49 @@ int main(int argc, char* argv[])
     Bind(socket, (struct sockaddr *) &serv_add, sizeof(serv_add));
     Listen(socket, 1);
 
-    len = sizeof(client);
-
     while(1)
     {
-        conn_fd = Accept(socket, (struct sockaddr* ) &client, len);
+        conn_fd = Accept(socket, NULL, NULL);
 
         printf("NODON: Connessione accettata\n");
         FullRead(conn_fd, &indice, sizeof(int));
         printf("NODON: il BlockServer ha richiesto i blocchi dall'ultimo indice %d\n", indice);
 
-        if( (bl = getBlocco(indice, genesi) == NULL)
-	{
-         printf("NODON: L'ultimo blocco che il BlockServer dice di possedere, non esiste.\n");
-         close(conn_fd);
-         continue;                //ATTENZIONE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! DA VERIVICARE IN POSSESSO DEL BLOCKSERVER!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	}
+        if( (bl = getBlocco(indice, genesi)) == NULL)
+        {
+            printf("NODON: L'ultimo blocco che il BlockServer dice di possedere, non esiste.\n");
+            close(conn_fd);
+            continue;                //ATTENZIONE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! DA VERIVICARE IN POSSESSO DEL BLOCKSERVER!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        }
        
         while(1)
         {   
             if(indice < numBlocchi) //Se il blocco da inviare al blockserver si trovava nel file
             {
-               bl = bl->next; 
-		//allora si aspetta il tempo prima di inviare il blocco
-               sleep(bl->tempo);
+                bl = bl->next; 
+		        //allora si aspetta il tempo prima di inviare il blocco
+                sleep(bl->tempo);
             }
             else
-            { //altrimenti se il blocco deve essere creato , allora l'attesa verra' fatta prima di inserire il nuovo blocco nella Blockchain.
-              pthread_mutex_lock(mutex);
-              if(indice == size)
-              {
-		  pthread_mutex_unlock(mutex);
-                  //si attende che il thread crei un nuovo nodo e lo inserisca nella Blockchain...
-                  sem_wait(&disp);
-              }
-              else
-                  pthread_mutex_unlock(mutex); 
-	      bl = bl->next;
+            {   //altrimenti se il blocco deve essere creato , allora l'attesa verra' fatta prima di inserire il nuovo blocco nella Blockchain.
+                pthread_mutex_lock(&mutex);
+                if(indice == size)
+                {
+                    pthread_mutex_unlock(&mutex);
+                    //si attende che il thread crei un nuovo nodo e lo inserisca nella Blockchain...
+                    sem_wait(disp);
+                }
+                else
+                    pthread_mutex_unlock(&mutex); 
+	            bl = bl->next;
             }
             FullWrite(conn_fd, &bl, sizeof(blocco));
             indice++;   
 
-            if( read(conn_fd, &check, sizeof(int)) == 0 ) 
-            {   //SE il server ha interrotto la comunicazione si torna indietro.
+            nread = read(conn_fd, &check, sizeof(int));
+            if(  check == 0 || nread == 0) 
+            {  
+                 //SE il server ha interrotto la comunicazione si torna indietro.
                 close(conn_fd);
                 break;
             }
@@ -139,8 +142,8 @@ int main(int argc, char* argv[])
 
     }
 
-    sem_unlink("disp");
     sem_close(disp);
+    sem_unlink("disp");
     return 0;
 }
 
@@ -149,14 +152,20 @@ void *produci(void* arg)
     blocco prodotto;
     int semVal=1;
     int inizio=1;
+    int file;
     time_t temp=time(NULL); 
     snprintf(prodotto.ts.ipMittente, 16, "%d.%d.%d.%d", rand()%256, rand()%256, rand()%256, rand()%256);
     prodotto.ts.portaMittente = 1024 + rand()%64512;
     snprintf(prodotto.ts.ipDestinatario, 16, "%d.%d.%d.%d", rand()%256, rand()%256, rand()%256, rand()%256);
-    prodotto.ts.portaDestinatatio = 1024 + rand()%64512;	
+    prodotto.ts.portaDestinatario = 1024 + rand()%64512;	
+
+    printf("THREAD NODON: Attivo\n");
+
+    file = open("blocchi_nodon.txt", O_CREAT | O_WRONLY, mode);
+
     while(1)
     {
-        pthread_mutex_lock(mutex);
+        pthread_mutex_lock(&mutex);
         prodotto.n = size+1;
         prodotto.tempo = 5 + rand()%11;
         prodotto.next = NULL;
@@ -165,23 +174,28 @@ void *produci(void* arg)
           temp=time(NULL);
           if((rand()%100)<50)
           {
-	    snprintf(prodotto.ts.ipMittente, 16, "%d.%d.%d.%d", rand()%256, rand()%256, rand()%256, rand()%256);
+	        snprintf(prodotto.ts.ipMittente, 16, "%d.%d.%d.%d", rand()%256, rand()%256, rand()%256, rand()%256);
             prodotto.ts.portaMittente = 1024 + rand()%64512;	
           }
           else
           {
             snprintf(prodotto.ts.ipDestinatario, 16, "%d.%d.%d.%d", rand()%256, rand()%256, rand()%256, rand()%256);
-            prodotto.ts.portaDestinatatio = 1024 + rand()%64512;
+            prodotto.ts.portaDestinatario = 1024 + rand()%64512;
           }
-	}
+	    }
         prodotto.ts.credito = 1 + rand()%1000000;
         prodotto.ts.numRandom = 1 + rand()%999999;        
         sleep(prodotto.tempo);
         inserimentoCoda(prodotto, genesi);
         size++;
-        pthread_mutex_unlock(mutex);
+        t.n = prodotto.n;
+        t.tempo = prodotto.tempo;
+        t.ts = prodotto.ts;
+        write(file, &t, sizeof(struct temp));
+        pthread_mutex_unlock(&mutex);
         sem_getvalue(disp,&semVal);
         if(semVal==0)
           sem_post(disp);
+        printf("THREAD NODON: Blocco creato ed inserito\n");
     }
 }
