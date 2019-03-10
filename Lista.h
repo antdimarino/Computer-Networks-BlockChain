@@ -10,6 +10,12 @@ typedef struct Transazione{
     int numRandom;
 } transazione;
 
+struct temp{
+    int n;
+    int tempo;
+    struct Transazione ts;
+};
+
 typedef struct Blocco{
     int n;
     int tempo;
@@ -21,12 +27,14 @@ void inserimentoCoda(blocco temp, blocco *genesi);
 blocco* getBlocco(int i, blocco* genesi);
 void stampaLista(blocco* genesi);
 
-void inserimentoCoda(blocco temp, blocco *genesi)
+void inserimentoCoda(struct temp t, blocco *genesi)
 {
     blocco *bl = malloc(sizeof(blocco));
     blocco *coda = malloc(sizeof(blocco));
     coda = genesi;
-    *bl = temp;
+    bl->n = t.n;
+    bl->tempo = t.tempo;
+    bl->ts = t.ts;
     bl->next = NULL;
 
     while(coda->next != NULL)
@@ -45,7 +53,8 @@ blocco* getBlocco(int i, blocco* genesi)
     {
         if(temp->next == NULL)
         {
-            return NULL;
+            temp->n = -1;
+            return temp;
         }
         temp = temp->next;
     }
