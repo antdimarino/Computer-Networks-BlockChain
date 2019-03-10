@@ -70,7 +70,8 @@ void stampaLista(blocco* genesi)
 
     while(temp != NULL)
     {
-        printf("n = %d\n", temp->n);
+        printf("n = %d\ntempo = %d\nIp Destinatario: %s\t Porta: %d\n", temp->n,temp->tempo, temp->ts.ipDestinatario, temp->ts.portaDestinatario);
+        printf("Ip Mittente: %s\t Porta Mittente: %d\nCredito: %d\nNumero Randomico: %d\n\n\n\n", temp->ts.ipMittente, temp->ts.portaMittente, temp->ts.credito, temp->ts.numRandom);
         temp = temp->next;
     }
 
