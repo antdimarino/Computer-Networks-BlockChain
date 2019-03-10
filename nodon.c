@@ -1,18 +1,6 @@
-#include <sys/types.h>   /* predefined types */
-#include <unistd.h>      /* include unix standard library */
-#include <arpa/inet.h>   /* IP addresses conversion utiliites */
-#include <sys/socket.h>  /* socket library */
-#include <errno.h>	 /* include error codes */
-#include <string.h>	 
-#include <time.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <pthread.h>
-#include <sys/select.h>
-#include <semaphore.h>
-#include "wrapper.h"
 #include "Lista.h"
+#include "wrapper.h"
+
 mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
 
 blocco* genesi;
