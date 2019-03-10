@@ -96,6 +96,7 @@ ssize_t FullWrite(int fd, const void *buf, size_t count)
     }
     return (nleft);
 }
+
 pid_t Fork(){
     pid_t pid;
     if((pid= fork())<0)
