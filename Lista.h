@@ -23,7 +23,7 @@ typedef struct Blocco{
     struct Blocco *next;
 } blocco;
 
-void inserimentoCoda(blocco temp, blocco *genesi);
+void inserimentoCoda(struct temp t, blocco *genesi);
 blocco* getBlocco(int i, blocco* genesi);
 void stampaLista(blocco* genesi);
 
@@ -40,8 +40,7 @@ void inserimentoCoda(struct temp t, blocco *genesi)
     while(coda->next != NULL)
         coda = coda->next;
 
-    coda->next = bl;
-   
+    coda->next = bl;   
 }
 
 blocco* getBlocco(int i, blocco* genesi)
