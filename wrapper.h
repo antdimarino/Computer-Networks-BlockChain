@@ -2,12 +2,14 @@
 #include<unistd.h> /* include unix standard library */
 #include<arpa/inet.h> /* IP addresses conversion utililites */
 #include<sys/socket.h> /* socket library */
-#include<stdio.h> /* include standard I/O library */
-#include<stdlib.h>
 #include<string.h>
 #include<time.h>
 #include<netdb.h>
 #include<errno.h>
+#include<sys/stat.h>
+#include<pthread.h>
+#include<semaphore.h>
+#include<fcntl.h>
 
 
 ssize_t FullWrite(int fd, const void *buf, size_t count);
