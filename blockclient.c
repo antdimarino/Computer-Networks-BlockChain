@@ -1,10 +1,6 @@
 #include "Lista.h"
 #include "wrapper.h"
 
-
-blocco* genesi;
-int size;
-
 int main(int argc, char* argv[])
 {
     int sock;
@@ -16,12 +12,6 @@ int main(int argc, char* argv[])
     char ip[16];
     int porta;
     int i;
-
-    size = 0;
-    genesi = malloc(sizeof(blocco));
-    genesi->n = 0;
-    genesi->tempo = 0;
-    genesi->next = NULL;
 
     if(argc <2)
     {
@@ -62,14 +52,18 @@ int main(int argc, char* argv[])
 
                 FullWrite(sock, &n, sizeof(int));
 
+                FullRead(sock, &n, sizeof(int));
+
+                if( n == -1 )
+                    printf("Questo blocco non e presente nella blockchain\n");
+            
                 for(i = 0; i<n; i++)
                 {
                     FullRead(sock, &t, sizeof(struct temp));
-                    inserimentoCoda(t, genesi);
-                }
 
-                stampaLista(genesi);
-               // resettaLista(genesi); //DA IMPLEMENTARE
+                    printf("n = %d\ntempo = %d\nIp Destinatario: %s\t Porta: %d\n", t.n,t.tempo, t.ts.ipDestinatario, t.ts.portaDestinatario);
+                    printf("Ip Mittente: %s\t Porta Mittente: %d\nCredito: %d\nNumero Randomico: %d\n\n\n\n", t.ts.ipMittente, t.ts.portaMittente, t.ts.credito, t.ts.numRandom);
+                }
 
                 break;
             case 2:
@@ -112,8 +106,6 @@ int main(int argc, char* argv[])
 
 
     }
-
-
 
     return 0;
 }
