@@ -9,6 +9,8 @@ char ip[16];
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 void* ottieniNodi(void* arg);
 void* gestoreClient(void* arg);
+int sommaCredito(blocco *genesi);
+int sommaTransazioni(char ip[], int porta, blocco* genesi);
 
 int main(int argc, char* argv[])
 {
@@ -104,7 +106,10 @@ void* gestoreClient(void* arg)
     int n;
     int i;
     struct temp t;
-    blocco temp;
+    blocco* temp;
+    char ip[16];
+    int porta;
+    int sum;
 
     FullRead(sock, &scelta, sizeof(int));
 
@@ -113,14 +118,28 @@ void* gestoreClient(void* arg)
         case 1:
             FullRead(sock, &n, sizeof(int));
 
-            for(i = n; i<=size; i++) //MUTUA ESCLUSIONEEEE
+            pthread_mutex_lock(&mutex);
+            if( n <= size)
             {
-                temp = getBlocco(i, genesi);
-                t.n = temp.n;
-                t.tempo = temp.tempo;
-                t.ts = temp.ts;
+                sum = 1 + (size - n);
+                pthread_mutex_unlock(&mutex);    
+                FullWrite(sock, &sum, sizeof(int));
 
-                FullWrite(sock, &t, sizeof(struct temp));                
+                for(i = 0; i<sum; i++) //MUTUA ESCLUSIONEEEE
+                {
+
+                    temp = getBlocco(i+n, genesi);
+                    t.n = temp->n;
+                    t.tempo = temp->tempo;
+                    t.ts = temp->ts;
+
+                    FullWrite(sock, &t, sizeof(struct temp));                
+                }        
+            }
+            else
+            {
+                n = -1;
+                FullWrite(sock, &n, sizeof(int));                
             }
             break;
 
@@ -128,26 +147,33 @@ void* gestoreClient(void* arg)
             FullRead(sock, &n, sizeof(int));
 
             temp = getBlocco(n, genesi);
-            t.n = temp.n;
-            t.tempo = temp.tempo;
-            t.ts = temp.ts;
+            t.n = temp->n;
+            t.tempo = temp->tempo;
+            t.ts = temp->ts;
 
-            FullWrite(sock, &t, sizeof(struct temp));   
-
+            FullWrite(sock, &t, sizeof(struct temp)); 
             break;
 
         case 3:
-            
+            sum = sommaCredito(genesi);
+
+            FullWrite(sock, &sum, sizeof(int));            
             break;
 
         case 4:
-            /* code */
+            FullRead(sock, &ip, sizeof(ip));
+
+            FullRead(sock, &porta, sizeof(int));
+
+            sum = sommaTransazioni(ip, porta, genesi);
+
+            FullWrite(sock, &sum, sizeof(int));   
+
             break;
     
         default:
             break;
     }
-
 
     pthread_exit(NULL);
 }
@@ -198,4 +224,41 @@ void* ottieniNodi(void * arg)
 
 
     pthread_exit(NULL);    
+}
+
+int sommaCredito(blocco* genesi)
+{
+    blocco *temp = malloc(sizeof(blocco));
+    temp = genesi;
+    int sum = 0;
+
+    if(temp != NULL)
+    {
+        temp = temp->next;
+        while(temp != NULL)
+        {
+            sum = sum + temp->ts.credito;
+            temp = temp->next;
+        }
+    }
+
+    return sum;    
+}
+
+int sommaTransazioni(char ip[], int porta, blocco* genesi)
+{
+    blocco *temp = malloc(sizeof(blocco));
+    temp = genesi;
+    int sum = 0;
+
+    while( temp != NULL)
+    {
+        if( strcmp(temp->ts.ipDestinatario, ip) && temp->ts.portaDestinatario == porta)
+            sum++;
+        if( strcmp(temp->ts.ipMittente, ip) && temp->ts.portaMittente == porta)
+            sum++;
+        
+        temp = temp->next;
+    }
+    return sum;
 }
