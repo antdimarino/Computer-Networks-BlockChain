@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
 
     if(argc < 2)
     {
-        perror("Input Error: add an address\n");
+        perror("Input Error: add an address");
         exit(1);        
     }
 
@@ -98,7 +98,55 @@ int main(int argc, char* argv[])
 
 void* gestoreClient(void* arg)
 {
-    int socket = *(int *) arg;
+    int sock = *(int *) arg;
+
+    int scelta;
+    int n;
+    int i;
+    struct temp t;
+    blocco temp;
+
+    FullRead(sock, &scelta, sizeof(int));
+
+    switch (scelta)
+    {
+        case 1:
+            FullRead(sock, &n, sizeof(int));
+
+            for(i = n; i<=size; i++) //MUTUA ESCLUSIONEEEE
+            {
+                temp = getBlocco(i, genesi);
+                t.n = temp.n;
+                t.tempo = temp.tempo;
+                t.ts = temp.ts;
+
+                FullWrite(sock, &t, sizeof(struct temp));                
+            }
+            break;
+
+        case 2:
+            FullRead(sock, &n, sizeof(int));
+
+            temp = getBlocco(n, genesi);
+            t.n = temp.n;
+            t.tempo = temp.tempo;
+            t.ts = temp.ts;
+
+            FullWrite(sock, &t, sizeof(struct temp));   
+
+            break;
+
+        case 3:
+            
+            break;
+
+        case 4:
+            /* code */
+            break;
+    
+        default:
+            break;
+    }
 
 
     pthread_exit(NULL);
