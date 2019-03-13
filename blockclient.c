@@ -13,6 +13,7 @@ int main(int argc, char* argv[])
     int porta;
     int i;
     int check;
+    int enable = 1;
 
     if(argc <2)
     {
@@ -21,6 +22,9 @@ int main(int argc, char* argv[])
     }
 
     sock = Socket(AF_INET, SOCK_STREAM, 0);
+
+    setsockopt(sock, SOL_SOCKET, SO_REUSEPORT, &enable, sizeof(int));
+    setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int));
 
     serv_add.sin_family = AF_INET;
     serv_add.sin_port = htons(2000);
@@ -101,13 +105,14 @@ int main(int argc, char* argv[])
 
                 break;
             case 5:
-		printf("Inserire l'indirizzo IP: ");
+		        printf("Inserire l'indirizzo IP: ");
                 scanf("%s", ip);
                 printf("\nInserire la porta: ");
                 scanf("%d", &porta);
                 printf("\n");
                 FullWrite(sock, &ip, sizeof(ip));
-	 	FullWrite(sock, &porta, sizeof(int));
+	 	        FullWrite(sock, &porta, sizeof(int));
+
 		 while(FullRead(sock,&n,sizeof(int))!=-1)
 		 {
 		  if(n==0)
@@ -119,7 +124,7 @@ int main(int argc, char* argv[])
 	          }
 		  i=1;
 		  FullWrite(sock,&i,sizeof(int));
-printf("\nTransazione numero= %d\nIp Mittente= %s\t\tporta Mittente= %d\nIp Destinatario= %s\t\tporta Destinatario= %d\nAmmontare= %d\nNumero random= %d\n",t.n,t.ts.ipMittente,t.ts.portaMittente,t.ts.ipDestinatario,t.ts.portaDestinatario,t.ts.credito,t.ts.numRandom);
+            printf("\nTransazione numero= %d\nIp Mittente= %s\t\tporta Mittente= %d\nIp Destinatario= %s\t\tporta Destinatario= %d\nAmmontare= %d\nNumero random= %d\n",t.n,t.ts.ipMittente,t.ts.portaMittente,t.ts.ipDestinatario,t.ts.portaDestinatario,t.ts.credito,t.ts.numRandom);
 		 }
 		  printf("\nRichiesta conclusa.\n");		
                 break;
