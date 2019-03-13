@@ -30,8 +30,7 @@ void stampaLista(blocco* genesi);
 void inserimentoCoda(struct temp t, blocco *genesi)
 {
     blocco *bl = malloc(sizeof(blocco));
-    blocco *coda = malloc(sizeof(blocco));
-    coda = genesi;
+    blocco *coda = genesi;
     bl->n = t.n;
     bl->tempo = t.tempo;
     bl->ts = t.ts;
@@ -63,8 +62,7 @@ blocco* getBlocco(int i, blocco* genesi)
 
 void stampaLista(blocco* genesi)
 {
-    blocco *temp = malloc(sizeof(blocco));
-    temp = genesi;
+    blocco *temp = genesi;
 
     printf("STAMPA LISTA\n");
 
