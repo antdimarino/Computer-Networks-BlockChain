@@ -6,33 +6,42 @@ mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
 blocco* genesi;
 int size = 0;
 char ip[16];
+int terminato;
+int pid;
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t ter = PTHREAD_MUTEX_INITIALIZER;
+pthread_t tidOttieniNodi;
+int numBlocchi;
+
+
 void* ottieniNodi(void* arg);
 void* gestoreClient(void* arg);
 int sommaCredito(blocco *genesi);
 int sommaTransazioni(char ip[], int porta, blocco* genesi);
+void signalHandler(int segnaleRicevuto);
 
 int main(int argc, char* argv[])
 {
-    int file, numBlocchi, i;
+    int file, i = 0;
     struct stat sb;
     struct temp t;
+    int dimAr = 1;
 
     int list_fd;
-    int client[50];
+    int *client = (int *)calloc(dimAr, sizeof(int));
     struct sockaddr_in server;
 
-    pthread_t tid;
+    pthread_t *tid = (pthread_t*)calloc(dimAr, sizeof(pthread_t));
 
     if(argc < 2)
     {
         perror("Input Error: add an address");
         exit(1);        
     }
+    pid = getpid();
 
     strcpy(ip, argv[1]);
 
-    size = 0;
     genesi = malloc(sizeof(blocco));
     genesi->n = 0;
     genesi->tempo = 0;
@@ -57,7 +66,11 @@ int main(int argc, char* argv[])
 
     for(i = 0; i<numBlocchi; i++)
     {
-        read(file, &t, sizeof(struct temp));
+        if( (FullRead(file, &t, sizeof(struct temp))) == -1)
+        {
+           printf("NODON: Errore sulla lettura del file\n");
+           exit(1);
+        }    
         inserimentoCoda(t, genesi);
         size++;
     }
@@ -69,7 +82,7 @@ int main(int argc, char* argv[])
 
     //BLOCKSERVER PUO LAVORARE A PIENO REGIME 
 
-    if( (pthread_create(&tid, NULL, ottieniNodi, NULL)) < 0) 
+    if( (pthread_create(&tidOttieniNodi, NULL, ottieniNodi, (void *) &numBlocchi)) < 0) 
     {
         perror("could not create thread");
         return 1;
@@ -78,23 +91,39 @@ int main(int argc, char* argv[])
     Bind(list_fd, (struct sockaddr *) &server, sizeof(server));
     Listen(list_fd, 1024);
 
+    i=0;
     while(1)
-    {
-        while( client[i] = Accept(list_fd, NULL, NULL) )
+    {    
+        signal(SIGUSR1, signalHandler);
+        client[i] = Accept(list_fd, NULL, NULL);
+        
+        printf("Connessione accettata\n");
+
+        if( (pthread_create(&tid[i], NULL, gestoreClient, (void* ) &client[i]) )  < 0) 
         {
-            printf("Connessione accettata\n");
-
-            if( (pthread_create(&tid, NULL, gestoreClient, (void* ) &client[i]) )  < 0) 
-            {
-                perror("could not create thread");
-                return 1;
-            }
+            perror("could not create thread");
+            return 1;
         }
+
+        i++;
+        if(i == dimAr )
+        {
+            if( (client = (int *)realloc(client, (i+5)*sizeof(int))) == NULL)
+            {
+                perror("Memoria insufficiente");
+                exit(1);
+            }                
+
+            if( (tid = (pthread_t*)realloc(tid, (i+5)*sizeof(pthread_t))) == NULL)
+            {
+                perror("Memoria insufficiente");
+                exit(1);
+            }
+
+            dimAr += 5;
+        }
+        
     }
-
-
-    pthread_join(tid, NULL);
-
     return 0;
 }
 
@@ -110,76 +139,109 @@ void* gestoreClient(void* arg)
     char ip[16];
     int porta;
     int sum;
+    int check;
 
-    FullRead(sock, &scelta, sizeof(int));
-
-    switch (scelta)
+    do
     {
-        case 1:
-            FullRead(sock, &n, sizeof(int));
+        if( (FullRead(sock, &scelta, sizeof(int))) == -1)
+        {
+            printf("THREAD GESTORE-CLIENT: Connessione persa\n");
+            exit(1);
+        }
 
-            pthread_mutex_lock(&mutex);
-            if( n <= size)
-            {
-                sum = 1 + (size - n);
-                pthread_mutex_unlock(&mutex);    
-                FullWrite(sock, &sum, sizeof(int));
-
-                for(i = 0; i<sum; i++) //MUTUA ESCLUSIONEEEE
+        switch (scelta)
+        {
+            case 1:
+                if( FullRead(sock, &n, sizeof(int)) == -1 )
                 {
+                    printf("THREAD GESTORE-CLIENT: Connessione persa\n");
+                    exit(1);
+                }
 
-                    temp = getBlocco(i+n, genesi);
-                    t.n = temp->n;
-                    t.tempo = temp->tempo;
-                    t.ts = temp->ts;
+                pthread_mutex_lock(&mutex);
+                if( n <= size)
+                {
+                    sum = 1 + (size - n);
+                    pthread_mutex_unlock(&mutex);    
+                    FullWrite(sock, &sum, sizeof(int));
 
-                    FullWrite(sock, &t, sizeof(struct temp));                
-                }        
-            }
-            else
-            {
-                n = -1;
-                FullWrite(sock, &n, sizeof(int));                
-            }
-            break;
+                    for(i = 0; i<sum; i++) //MUTUA ESCLUSIONEEEE
+                    {
 
-        case 2:
-            FullRead(sock, &n, sizeof(int));
+                        temp = getBlocco(i+n, genesi);
+                        t.n = temp->n;
+                        t.tempo = temp->tempo;
+                        t.ts = temp->ts;
 
-            temp = getBlocco(n, genesi);
-            t.n = temp->n;
-            t.tempo = temp->tempo;
-            t.ts = temp->ts;
+                        FullWrite(sock, &t, sizeof(struct temp));                
+                    }        
+                }
+                else
+                {
+                    n = -1;
+                    FullWrite(sock, &n, sizeof(int));                
+                }
+                break;
 
-            FullWrite(sock, &t, sizeof(struct temp)); 
-            break;
+            case 2:
+                if( FullRead(sock, &n, sizeof(int)) == -1)
+                {
+                    printf("THREAD GESTORE-CLIENT: Connessione persa\n");
+                    exit(1);
+                }
 
-        case 3:
-            sum = sommaCredito(genesi);
+                temp = getBlocco(n, genesi);
+                t.n = temp->n;
+                t.tempo = temp->tempo;
+                t.ts = temp->ts;
 
-            FullWrite(sock, &sum, sizeof(int));            
-            break;
+                FullWrite(sock, &t, sizeof(struct temp)); 
+                break;
 
-        case 4:
-            FullRead(sock, &ip, sizeof(ip));
+            case 3:
+                sum = sommaCredito(genesi);
 
-            FullRead(sock, &porta, sizeof(int));
+                FullWrite(sock, &sum, sizeof(int));            
+                break;
 
-            sum = sommaTransazioni(ip, porta, genesi);
+            case 4:
+                if( FullRead(sock, &ip, sizeof(ip)) == -1)
+                {
+                    printf("THREAD GESTORE-CLIENT: Connessione persa\n");
+                    exit(1);
+                }
 
-            FullWrite(sock, &sum, sizeof(int));   
+                if( FullRead(sock, &porta, sizeof(int)) == -1)
+                {
+                    printf("THREAD GESTORE-CLIENT: Connessione persa\n");
+                    exit(1);
+                }
 
-            break;
-    
-        default:
-            break;
-    }
+                sum = sommaTransazioni(ip, porta, genesi);
+
+                FullWrite(sock, &sum, sizeof(int));   
+
+                break;
+        
+            default:
+                printf("Opzione non prevista");
+                break;
+        }
+
+        if( FullRead(sock, &check, sizeof(int)) == -1)
+        {
+            printf("THREAD GESTORE-CLIENT: Connessione persa\n");
+            exit(1);
+        }
+
+    }while(check == 1);
 
     pthread_exit(NULL);
 }
 
 void* ottieniNodi(void * arg)
 {
+    int numBl = *(int *) arg;
     int socket, len;
     struct sockaddr_in clientNodon;
     struct temp t;
@@ -204,32 +266,34 @@ void* ottieniNodi(void * arg)
 
     Connect(socket, (struct sockaddr *)&clientNodon, len);
 
-    printf("BLOCKSERVER: Chiedo al nodon i blocchi dall'indice: %d\n", size);
-    FullWrite(socket, &size, sizeof(int));
+    printf("BLOCKSERVER: Chiedo al nodon i blocchi dall'indice: %d\n", numBl);
+    FullWrite(socket, &numBl, sizeof(int));
 
     while(1)
     {        
-        FullRead(socket, &t, sizeof(struct temp));
+        if( (FullRead(socket, &t, sizeof(struct temp))) == -1)
+        {
+            printf("THREAD OTTIENINODI: Ho perso la connessione con nodon\n");
+            break;
+        }
         pthread_mutex_lock(&mutex);
         inserimentoCoda(t, genesi);        
         size++;
         write(file, &t, sizeof(struct temp));
         printf("THREAD BLOCKSERVER: Blocco ricevuto ed inserito: %d.\n\n", t.n);
-        pthread_mutex_unlock(&mutex);   
-
-        
+        pthread_mutex_unlock(&mutex);           
 
         FullWrite(socket, &check, sizeof(int));         
     }
 
 
+    kill(pid, SIGUSR1);
     pthread_exit(NULL);    
 }
 
 int sommaCredito(blocco* genesi)
 {
-    blocco *temp = malloc(sizeof(blocco));
-    temp = genesi;
+    blocco *temp = genesi;
     int sum = 0;
 
     if(temp != NULL)
@@ -247,18 +311,26 @@ int sommaCredito(blocco* genesi)
 
 int sommaTransazioni(char ip[], int porta, blocco* genesi)
 {
-    blocco *temp = malloc(sizeof(blocco));
-    temp = genesi;
+    blocco *temp = genesi;
     int sum = 0;
 
     while( temp != NULL)
     {
-        if( strcmp(temp->ts.ipDestinatario, ip) && temp->ts.portaDestinatario == porta)
-            sum++;
-        if( strcmp(temp->ts.ipMittente, ip) && temp->ts.portaMittente == porta)
-            sum++;
-        
+        if( (strcmp(temp->ts.ipDestinatario, ip) == 0  && temp->ts.portaDestinatario == porta)  || (strcmp(temp->ts.ipMittente, ip) == 0 && temp->ts.portaMittente == porta) )
+            sum++;        
         temp = temp->next;
     }
     return sum;
 }
+
+void signalHandler(int segnaleRicevuto)
+{
+    pthread_join(tidOttieniNodi, NULL);
+
+
+    if( (pthread_create(&tidOttieniNodi, NULL, ottieniNodi, (void *) &numBlocchi)) < 0) 
+    {
+        perror("could not create thread");
+    }
+}
+
