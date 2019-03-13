@@ -8,6 +8,7 @@ int size = 0;
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 sem_t *disp;
 int bloccato = 0;
+int enable = 1;
 
 void *produci(void *arg);
 
@@ -35,8 +36,6 @@ int main(int argc, char* argv[])
         exit(1);
     }
 
-
-    //INIZIALIZZAZIONE NODON
     size = 0;
     genesi = malloc(sizeof(blocco));
     genesi->n = 0;
@@ -44,6 +43,9 @@ int main(int argc, char* argv[])
     genesi->next = NULL;
 
     socket = Socket(AF_INET, SOCK_STREAM, 0);
+
+    setsockopt(socket, SOL_SOCKET, SO_REUSEPORT, &enable, sizeof(int));
+    setsockopt(socket, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int));
 
     serv_add.sin_family      = AF_INET;
     serv_add.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -75,9 +77,6 @@ int main(int argc, char* argv[])
     printf("NODON: Numero blocchi presi dal file: %d\n", size);
     stampaLista(genesi);        
 
-    //NODON PRONTO PER LAVORARE A PIENO REGIME
-
-    //CREAZIONE THREAD CHE GENERA LA BLOCKCHAIN
     if( (pthread_create(&tid, NULL, produci, NULL)) < 0) 
     {
         perror("could not create thread");
@@ -86,8 +85,6 @@ int main(int argc, char* argv[])
 
     Bind(socket, (struct sockaddr *) &serv_add, sizeof(serv_add));
     Listen(socket, 1);
-
-
 
     while(1)
     {
@@ -107,25 +104,24 @@ int main(int argc, char* argv[])
         {
             printf("NODON: L'ultimo blocco che il BlockServer dice di possedere, non esiste.\n");
             close(conn_fd);
-            continue;                //ATTENZIONE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! DA VERIVICARE IN POSSESSO DEL BLOCKSERVER!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            continue;                
         }
        
         while(1)
         {   
 
-            if(indice < numBlocchi) //Se il blocco da inviare al blockserver si trovava nel file
+            if(indice < numBlocchi) 
             {
                 printf("NODON: Voglio ricevere i blocchi dal file\n");
                 bl = bl->next; 
-		        //allora si aspetta il tempo prima di inviare il blocco
+		        
                 sleep(bl->tempo);
             }
             else
-            {   //altrimenti se il blocco deve essere creato , allora l'attesa verra' fatta prima di inserire il nuovo blocco nella Blockchain.
+            {   
                 pthread_mutex_lock(&mutex);
                 if(indice == size)
                 {
-                    //si attende che il thread crei un nuovo nodo e lo inserisca nella Blockchain...
                     bloccato = 1;
                     pthread_mutex_unlock(&mutex);
                     sem_wait(disp);
@@ -147,7 +143,6 @@ int main(int argc, char* argv[])
             nread = FullRead(conn_fd, &check, sizeof(int));
             if(  check != 1 || nread == -1 ) 
             {  
-                 //SE il server ha interrotto la comunicazione si torna indietro.
                 printf("NODON: Il BlockServer ha interrotto la connessione!\n");
                 close(conn_fd);
                 break;
