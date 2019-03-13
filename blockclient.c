@@ -114,7 +114,7 @@ int main(int argc, char* argv[])
 		    break;
 		  if ( FullRead(sock,&t,sizeof(struct temp))==-1)
 		  {
-		    printf("COnnessione con il Blockserver interrotta\n");
+		    printf("Connessione con il Blockserver interrotta\n");
 		    break;
 	          }
 		  i=1;
