@@ -61,7 +61,11 @@ int main(int argc, char* argv[])
 
     for(i = 0; i<numBlocchi; i++)
     {
-        read(file, &t, sizeof(struct temp));
+       if( (FullRead(file, &t, sizeof(struct temp))) == -1)
+       {
+           printf("NODON: Errore sulla lettura del file\n");
+           exit(1);
+       }         
         inserimentoCoda(t, genesi);
         size++;
     }
@@ -91,7 +95,12 @@ int main(int argc, char* argv[])
         conn_fd = Accept(socket, NULL, NULL);
 
         printf("NODON: Connessione accettata\n");
-        FullRead(conn_fd, &indice, sizeof(int));
+        if( ( FullRead(conn_fd, &indice, sizeof(int)) ) == -1)
+        {
+            printf("NODON: Connessione persa\n");
+            break;
+        }
+
         printf("NODON: il BlockServer ha richiesto i blocchi dall'ultimo indice %d\n", indice);
 
         if( (bl = getBlocco(indice, genesi)) == NULL)
@@ -135,8 +144,8 @@ int main(int argc, char* argv[])
             indice++;
 
 
-            nread = read(conn_fd, &check, sizeof(int));
-            if(  check != 1 || nread == 0 ) 
+            nread = FullRead(conn_fd, &check, sizeof(int));
+            if(  check != 1 || nread == -1 ) 
             {  
                  //SE il server ha interrotto la comunicazione si torna indietro.
                 printf("NODON: Il BlockServer ha interrotto la connessione!\n");
@@ -159,6 +168,8 @@ void *produci(void* arg)
     time_t temp=time(NULL);
     struct temp t;
 
+    srand(time(NULL));
+
     snprintf(t.ts.ipMittente, 16, "%d.%d.%d.%d", rand()%256, rand()%256, rand()%256, rand()%256);
     t.ts.portaMittente = 1024 + rand()%64512;
     snprintf(t.ts.ipDestinatario, 16, "%d.%d.%d.%d", rand()%256, rand()%256, rand()%256, rand()%256);
@@ -177,7 +188,7 @@ void *produci(void* arg)
         if( (time(NULL)-temp) > 20 )
         {
             temp=time(NULL);
-            if( (rand()%100)<50 )
+            if( (rand()%1) == 0 )
             {
                 snprintf(t.ts.ipMittente, 16, "%d.%d.%d.%d", rand()%256, rand()%256, rand()%256, rand()%256);
                 t.ts.portaMittente = 1024 + rand()%64512;	
