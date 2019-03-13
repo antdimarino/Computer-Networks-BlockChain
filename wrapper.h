@@ -18,46 +18,52 @@ ssize_t FullRead(int fd, void *buf, size_t count);
 int Accept(int socket,struct sockaddr *addr, socklen_t *addr_len);
 void Listen(int socket,int backlog);
 void Bind(int socket,struct sockaddr *addr,socklen_t addr_len);
-void Connect(int socket,struct sockaddr *addr,socklen_t addr_len);
+int Connect(int socket,struct sockaddr *addr,socklen_t addr_len);
 pid_t Fork();
+
 int Socket(int domain,int type,int protocol)
 {
     int fd;
     if((fd=socket(domain,type,protocol))<0){
-        printf("socket error\n");
+        perror("socket error");
         exit(1);
     }
     return fd;
 }
-void Connect(int socket,struct sockaddr *addr,socklen_t addr_len)
+
+int Connect(int socket,struct sockaddr *addr,socklen_t addr_len)
 {
     if(connect(socket,addr,addr_len)<0){
-        perror("connect error");
-        exit(1);
+        perror("Connect error");
+        return -1;
     }
+    
+    return 0;    
 }
 void Bind(int socket,struct sockaddr *addr,socklen_t addr_len)
 {
     if(bind(socket,addr,addr_len)<0){
-        printf("bind error\n");
+        perror("bind error");
         exit(1);
     }
 }
 void Listen(int socket,int backlog)
 {
     if(listen(socket,backlog)<0){
-        printf("listen error\n");
+        perror("listen error");
         exit(1);
     }
 }
+
 int Accept(int socket,struct sockaddr *addr, socklen_t *addr_len)
 {
     int connfd;
     if((connfd=accept(socket,addr,addr_len))<0){
-        printf("accept error\n");
+        perror("accept error");
         exit(1);
     }
 }
+
 ssize_t FullRead(int fd, void *buf, size_t count)
 {
     size_t nleft;
@@ -80,6 +86,7 @@ ssize_t FullRead(int fd, void *buf, size_t count)
     buf = 0;
     return (nleft);
 }
+
 ssize_t FullWrite(int fd, const void *buf, size_t count)
 {
     size_t nleft;
