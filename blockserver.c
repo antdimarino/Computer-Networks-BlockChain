@@ -12,7 +12,7 @@ pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t ter = PTHREAD_MUTEX_INITIALIZER;
 pthread_t tidOttieniNodi;
 int numBlocchi;
-
+int enable = 1;
 
 void* ottieniNodi(void* arg);
 void* gestoreClient(void* arg);
@@ -46,9 +46,11 @@ int main(int argc, char* argv[])
     genesi->n = 0;
     genesi->tempo = 0;
     genesi->next = NULL;
-
-    //PREPARAZIONE SOCKET E SOCKADDR 
+ 
     list_fd = Socket(AF_INET, SOCK_STREAM, 0); 
+
+    setsockopt(list_fd, SOL_SOCKET, SO_REUSEPORT, &enable, sizeof(int));
+    setsockopt(list_fd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int));
 
     server.sin_family = AF_INET;
     server.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -79,8 +81,6 @@ int main(int argc, char* argv[])
 
     printf("BLOCKSERVER: Numero blocchi presi dal file: %d\n", size);
     stampaLista(genesi); 
-
-    //BLOCKSERVER PUO LAVORARE A PIENO REGIME 
 
     if( (pthread_create(&tidOttieniNodi, NULL, ottieniNodi, (void *) &numBlocchi)) < 0) 
     {
@@ -135,11 +135,12 @@ void* gestoreClient(void* arg)
     int n;
     int i;
     struct temp t;
-    blocco* temp;
+    blocco* blTemp;
     char ip[16];
     int porta;
     int sum;
     int check;
+    int nread;
 
     do
     {
@@ -165,13 +166,13 @@ void* gestoreClient(void* arg)
                     pthread_mutex_unlock(&mutex);    
                     FullWrite(sock, &sum, sizeof(int));
 
-                    for(i = 0; i<sum; i++) //MUTUA ESCLUSIONEEEE
+                    for(i = 0; i<sum; i++)
                     {
 
-                        temp = getBlocco(i+n, genesi);
-                        t.n = temp->n;
-                        t.tempo = temp->tempo;
-                        t.ts = temp->ts;
+                        blTemp = getBlocco(i+n, genesi);
+                        t.n = blTemp->n;
+                        t.tempo = blTemp->tempo;
+                        t.ts = blTemp->ts;
 
                         FullWrite(sock, &t, sizeof(struct temp));                
                     }        
@@ -190,10 +191,10 @@ void* gestoreClient(void* arg)
                     exit(1);
                 }
 
-                temp = getBlocco(n, genesi);
-                t.n = temp->n;
-                t.tempo = temp->tempo;
-                t.ts = temp->ts;
+                blTemp = getBlocco(n, genesi);
+                t.n = blTemp->n;
+                t.tempo = blTemp->tempo;
+                t.ts = blTemp->ts;
 
                 FullWrite(sock, &t, sizeof(struct temp)); 
                 break;
@@ -223,44 +224,55 @@ void* gestoreClient(void* arg)
 
                 break;
             case 5:
-	    if ( FullRead(sock,&ip,sizeof(ip)) )
-	    {
-		 printf("THREAD GESTORE-CLIENT: Connessione persa\n");
-                 exit(1);
-	    }
-	   if ( FullRead(sock,&porta,sizeof(int)) )
-            {
-		 printf("THREAD GESTORE-CLIENT: Connessione persa\n");
-                 exit(1);
-	    }
-            blTemp = genesi;
-	    while(blTemp->next!=NULL)
-	    {  
-		blTemp=blTemp->next;
-		if((strcmp(blTemp->ts.ipDestinatario, ip)==0 && blTemp->ts.portaDestinatario==porta) || (strcmp(blTemp->ts.ipMittente, ip)==0 && blTemp->ts.portaMittente==porta) )
-		{
-		  n=1;
-		  FullWrite(sock,&n,sizeof(int));
-		  t.n = blTemp->n;
-                  t.tempo = blTemp->tempo;
-                  t.ts = blTemp->ts;
-		  FullWrite(sock,&t,sizeof(struct temp));
-		  nread=FullRead(sock,&i,sizeof(int));
-		  if(i!=1 || nread==-1)
-		  {
-		   i=-1;
-		   break;
-		  }
-		 }
-	    }
-            if(i!=-1)
-	     {
-	       n=0;
-	       FullWrite(sock,&n,sizeof(int));
-             }
-            break;
+                if ( FullRead(sock, &ip, sizeof(ip)) == -1)
+                {
+                    printf("THREAD GESTORE-CLIENT: Connessione persa\n");
+                    exit(1);
+                }
+
+                if ( FullRead(sock, &porta, sizeof(int)) == -1)
+                {
+                    printf("THREAD GESTORE-CLIENT: Connessione persa\n");
+                    exit(1);
+                }
+                    
+                blTemp = genesi;
+                while(blTemp->next != NULL)
+                {  
+                    blTemp = blTemp->next;
+                    if((strcmp(blTemp->ts.ipDestinatario, ip) == 0 && blTemp->ts.portaDestinatario == porta) || (strcmp(blTemp->ts.ipMittente, ip) == 0 && blTemp->ts.portaMittente == porta) )
+                    {
+                        n = 1;
+
+                        FullWrite(sock, &n, sizeof(int));
+
+                        t.n = blTemp->n;
+                        t.tempo = blTemp->tempo;
+                        t.ts = blTemp->ts;
+
+                        FullWrite(sock, &t, sizeof(struct temp));
+
+                        nread = FullRead(sock, &i, sizeof(int));
+                        if(i != 1 || nread == -1)
+                        {
+                            i = -1;
+                            break;
+                        }
+                    }
+                }
+
+                if(i != -1)
+                {
+                    n = 0;
+                    FullWrite(sock,&n,sizeof(int));
+                }
+
+                break;
+
             default:
+
                 printf("Opzione non prevista");
+
                 break;
         }
 
@@ -290,6 +302,9 @@ void* ottieniNodi(void * arg)
 
     socket = Socket(AF_INET, SOCK_STREAM, 0);
 
+    setsockopt(socket, SOL_SOCKET, SO_REUSEPORT, &enable, sizeof(int));
+    setsockopt(socket, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int));
+
     clientNodon.sin_family = AF_INET;
     clientNodon.sin_port = htons(1025);
 
@@ -300,7 +315,11 @@ void* ottieniNodi(void * arg)
 
     len = sizeof(clientNodon);
 
-    Connect(socket, (struct sockaddr *)&clientNodon, len);
+    while( (Connect(socket, (struct sockaddr *)&clientNodon, len)) == -1)
+    {
+        printf("Nuovo tentativo di riconnessione tra 10 secondi\n");
+        sleep(10);
+    }
 
     printf("BLOCKSERVER: Chiedo al nodon i blocchi dall'indice: %d\n", numBl);
     FullWrite(socket, &numBl, sizeof(int));
@@ -329,16 +348,16 @@ void* ottieniNodi(void * arg)
 
 int sommaCredito(blocco* genesi)
 {
-    blocco *temp = genesi;
+    blocco *bl = genesi;
     int sum = 0;
 
-    if(temp != NULL)
+    if(bl != NULL)
     {
-        temp = temp->next;
-        while(temp != NULL)
+        bl = bl->next;
+        while(bl != NULL)
         {
-            sum = sum + temp->ts.credito;
-            temp = temp->next;
+            sum = sum + bl->ts.credito;
+            bl = bl->next;
         }
     }
 
@@ -347,14 +366,14 @@ int sommaCredito(blocco* genesi)
 
 int sommaTransazioni(char ip[], int porta, blocco* genesi)
 {
-    blocco *temp = genesi;
+    blocco *bl = genesi;
     int sum = 0;
 
-    while( temp != NULL)
+    while( bl != NULL)
     {
-        if( (strcmp(temp->ts.ipDestinatario, ip) == 0  && temp->ts.portaDestinatario == porta)  || (strcmp(temp->ts.ipMittente, ip) == 0 && temp->ts.portaMittente == porta) )
+        if( (strcmp(bl->ts.ipDestinatario, ip) == 0  && bl->ts.portaDestinatario == porta)  || (strcmp(bl->ts.ipMittente, ip) == 0 && bl->ts.portaMittente == porta) )
             sum++;        
-        temp = temp->next;
+        bl = bl->next;
     }
     return sum;
 }
