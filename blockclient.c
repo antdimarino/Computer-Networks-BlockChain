@@ -35,8 +35,8 @@ int main(int argc, char* argv[])
     do
     {
         printf("BLOCK CLIENT: Scegli un operazione da effettuare sull'attuale blockchain\n");
-        printf("[1] Visualizza le ultime n transazioni\n[2] Visualizza una generica transazione\n");
-        printf("[3] Somma dei valori di tutta la blockchain\n[4] Cerca una transazione di un indirizzo specifico\n");
+        printf("[1] Visualizzare le ultime n transazioni\n[2] Visualizzare una generica transazione\n");
+        printf("[3] Visualizzare la somma dei valori di tutta la blockchain\n[4] Cercare il numero di transazioni di un indirizzo specifico\n[5] Cercare tutte le transazioni di un indirizzo specifico\n");
         printf("Scelta: ");
         scanf("%d", &scelta);
         printf("\n");
@@ -100,7 +100,29 @@ int main(int argc, char* argv[])
                 printf("L'indirizzo %s: %d e' coinvolto in %d transazioni\n", ip, porta, n);
 
                 break;
-        
+            case 5:
+		printf("Inserire l'indirizzo IP: ");
+                scanf("%s", ip);
+                printf("\nInserire la porta: ");
+                scanf("%d", &porta);
+                printf("\n");
+                FullWrite(sock, &ip, sizeof(ip));
+	 	FullWrite(sock, &porta, sizeof(int));
+		 while(FullRead(sock,&n,sizeof(int))!=-1)
+		 {
+		  if(n==0)
+		    break;
+		  if ( FullRead(sock,&t,sizeof(struct temp))==-1)
+		  {
+		    printf("COnnessione con il Blockserver interrotta\n");
+		    break;
+	          }
+		  i=1;
+		  FullWrite(sock,&i,sizeof(int));
+printf("\nTransazione numero= %d\nIp Mittente= %s\t\tporta Mittente= %d\nIp Destinatario= %s\t\tporta Destinatario= %d\nAmmontare= %d\nNumero random= %d\n",t.n,t.ts.ipMittente,t.ts.portaMittente,t.ts.ipDestinatario,t.ts.portaDestinatario,t.ts.credito,t.ts.numRandom);
+		 }
+		  printf("\nRichiesta conclusa.\n");		
+                break;
             default:
                 printf("Opzione non prevista\n");
                 break;
