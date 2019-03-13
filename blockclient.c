@@ -12,6 +12,7 @@ int main(int argc, char* argv[])
     char ip[16];
     int porta;
     int i;
+    int check;
 
     if(argc <2)
     {
@@ -31,9 +32,9 @@ int main(int argc, char* argv[])
 
     Connect(sock, (struct sockaddr *) &serv_add, sizeof(serv_add));
 
-    while(1)
+    do
     {
-        printf("BLOCK CLIENT: Scegli un operazione da effettuare\n");
+        printf("BLOCK CLIENT: Scegli un operazione da effettuare sull'attuale blockchain\n");
         printf("[1] Visualizza le ultime n transazioni\n[2] Visualizza una generica transazione\n");
         printf("[3] Somma dei valori di tutta la blockchain\n[4] Cerca una transazione di un indirizzo specifico\n");
         printf("Scelta: ");
@@ -81,11 +82,11 @@ int main(int argc, char* argv[])
                 break;
             case 3:
                 FullRead(sock, &n, sizeof(int));
-                printf("La somma dei valori di tutte le transazioni = %d\n", n);                
+                printf("La somma dei valori di tutte le attuali transazioni = %d\n", n);                
                 break;
             case 4:
                 printf("Inserisci indirizzo IP: ");
-                scanf("%s", &ip);
+                scanf("%s", ip);
                 printf("\nInserisci la porta: ");
                 scanf("%d", &porta);
                 printf("\n");
@@ -101,11 +102,17 @@ int main(int argc, char* argv[])
                 break;
         
             default:
+                printf("Opzione non prevista\n");
                 break;
         }
 
+        printf("[1] Continui ad usufruire del servizio\n[0]Esci\nScelta: ");
+        scanf("%d", &check);
+        printf("\n");
 
-    }
+        FullWrite(sock, &check, sizeof(int));
+
+    }while (check == 1);
 
     return 0;
 }
