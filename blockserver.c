@@ -222,7 +222,43 @@ void* gestoreClient(void* arg)
                 FullWrite(sock, &sum, sizeof(int));   
 
                 break;
-        
+            case 5:
+	    if ( FullRead(sock,&ip,sizeof(ip)) )
+	    {
+		 printf("THREAD GESTORE-CLIENT: Connessione persa\n");
+                 exit(1);
+	    }
+	   if ( FullRead(sock,&porta,sizeof(int)) )
+            {
+		 printf("THREAD GESTORE-CLIENT: Connessione persa\n");
+                 exit(1);
+	    }
+            blTemp = genesi;
+	    while(blTemp->next!=NULL)
+	    {  
+		blTemp=blTemp->next;
+		if((strcmp(blTemp->ts.ipDestinatario, ip)==0 && blTemp->ts.portaDestinatario==porta) || (strcmp(blTemp->ts.ipMittente, ip)==0 && blTemp->ts.portaMittente==porta) )
+		{
+		  n=1;
+		  FullWrite(sock,&n,sizeof(int));
+		  t.n = blTemp->n;
+                  t.tempo = blTemp->tempo;
+                  t.ts = blTemp->ts;
+		  FullWrite(sock,&t,sizeof(struct temp));
+		  nread=FullRead(sock,&i,sizeof(int));
+		  if(i!=1 || nread==-1)
+		  {
+		   i=-1;
+		   break;
+		  }
+		 }
+	    }
+            if(i!=-1)
+	     {
+	       n=0;
+	       FullWrite(sock,&n,sizeof(int));
+             }
+            break;
             default:
                 printf("Opzione non prevista");
                 break;
