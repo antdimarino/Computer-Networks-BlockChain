@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
     sem_unlink("disp");
     if ( (disp = sem_open("disp", O_CREAT | O_EXCL, mode, 0)) == SEM_FAILED)
     {
-        perror("inizializzazione semaforo fallita\n");
+        printf("inizializzazione semaforo fallita\n");
         exit(1);
     }
 
@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
 
     if( (fstat(file, &sb)) < 0)
     {
-        perror("fstat error\n");
+        printf("fstat error\n");
         exit(1);
     }
     
@@ -79,7 +79,7 @@ int main(int argc, char* argv[])
 
     if( (pthread_create(&tid, NULL, produci, NULL)) < 0) 
     {
-        perror("could not create thread");
+        printf("could not create thread");
         return 1;
     }
 
@@ -151,7 +151,8 @@ int main(int argc, char* argv[])
     }
 
     sem_close(disp);
-    sem_unlink("disp");
+    sem_unlink("disp");    
+    pthread_join(tid, NULL);
     return 0;
 }
 
@@ -183,7 +184,7 @@ void *produci(void* arg)
         if( (time(NULL)-temp) > 20 )
         {
             temp=time(NULL);
-            if( (rand()%1) == 0 )
+            if( (rand()%200) < 100)
             {
                 snprintf(t.ts.ipMittente, 16, "%d.%d.%d.%d", rand()%256, rand()%256, rand()%256, rand()%256);
                 t.ts.portaMittente = 1024 + rand()%64512;	
@@ -218,4 +219,6 @@ void *produci(void* arg)
             pthread_mutex_unlock(&mutex);
         
     }
+
+    pthread_exit(NULL);
 }
