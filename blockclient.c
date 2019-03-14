@@ -57,14 +57,22 @@ int main(int argc, char* argv[])
 
                 FullWrite(sock, &n, sizeof(int));
 
-                FullRead(sock, &n, sizeof(int));
+                if ( FullRead(sock, &n, sizeof(int)) == -1)
+                {
+                    perror("Connessione persa");
+                    exit(1);
+                }
 
                 if( n == -1 )
                     printf("Questo blocco non e presente nella blockchain\n");
             
                 for(i = 0; i<n; i++)
                 {
-                    FullRead(sock, &t, sizeof(struct temp));
+                    if( FullRead(sock, &t, sizeof(struct temp)) == -1)
+                    {
+                        perror("Connessione persa");
+                        exit(1);
+                    }
 
                     printf("n = %d\ntempo = %d\nIp Destinatario: %s\t Porta: %d\n", t.n,t.tempo, t.ts.ipDestinatario, t.ts.portaDestinatario);
                     printf("Ip Mittente: %s\t Porta Mittente: %d\nCredito: %d\nNumero Randomico: %d\n\n\n\n", t.ts.ipMittente, t.ts.portaMittente, t.ts.credito, t.ts.numRandom);
@@ -79,13 +87,21 @@ int main(int argc, char* argv[])
 
                 FullWrite(sock, &n, sizeof(int));
 
-                FullRead(sock, &t, sizeof(struct temp));
+                if( FullRead(sock, &t, sizeof(struct temp)) == -1)
+                {
+                    perror("Connessione persa");
+                    exit(1);
+                }
 
                 printf("n = %d\ntempo = %d\nIp Destinatario: %s\t Porta: %d\n", t.n,t.tempo, t.ts.ipDestinatario, t.ts.portaDestinatario);
                 printf("Ip Mittente: %s\t Porta Mittente: %d\nCredito: %d\nNumero Randomico: %d\n\n\n\n", t.ts.ipMittente, t.ts.portaMittente, t.ts.credito, t.ts.numRandom);
                 break;
             case 3:
-                FullRead(sock, &n, sizeof(int));
+                if( FullRead(sock, &n, sizeof(int)) == -1)
+                {
+                    perror("Connessione persa");
+                    exit(1);
+                }
                 printf("La somma dei valori di tutte le attuali transazioni = %d\n", n);                
                 break;
             case 4:
@@ -99,7 +115,11 @@ int main(int argc, char* argv[])
 
                 FullWrite(sock, &porta, sizeof(int));
 
-                FullRead(sock, &n, sizeof(int));
+                if( FullRead(sock, &n, sizeof(int)) == -1)
+                {
+                    perror("Connessione persa");
+                    exit(1);
+                }
 
                 printf("L'indirizzo %s: %d e' coinvolto in %d transazioni\n", ip, porta, n);
 
@@ -113,25 +133,29 @@ int main(int argc, char* argv[])
                 FullWrite(sock, &ip, sizeof(ip));
 	 	        FullWrite(sock, &porta, sizeof(int));
 
-		 while(FullRead(sock,&n,sizeof(int))!=-1)
-		 {
-		  if(n==0)
-		    break;
-		  if ( FullRead(sock,&t,sizeof(struct temp))==-1)
-		  {
-		    printf("Connessione con il Blockserver interrotta\n");
-		    break;
-	          }
-		  i=1;
-		  FullWrite(sock,&i,sizeof(int));
-            printf("\nTransazione numero= %d\nIp Mittente= %s\t\tporta Mittente= %d\nIp Destinatario= %s\t\tporta Destinatario= %d\nAmmontare= %d\nNumero random= %d\n",t.n,t.ts.ipMittente,t.ts.portaMittente,t.ts.ipDestinatario,t.ts.portaDestinatario,t.ts.credito,t.ts.numRandom);
-		 }
-		  printf("\nRichiesta conclusa.\n");		
+                while(FullRead(sock,&n,sizeof(int))!=-1)
+                {
+                    if(n==0)
+                        break;
+
+                    if ( FullRead(sock,&t,sizeof(struct temp)) == -1)
+                    {
+                        printf("Connessione con il Blockserver interrotta\n");
+                        break;
+                    }
+                        i=1;
+                        FullWrite(sock,&i,sizeof(int));
+                        printf("\nTransazione numero= %d\nIp Mittente= %s\t\tporta Mittente= %d\nIp Destinatario= %s\t\tporta Destinatario= %d\nAmmontare= %d\nNumero random= %d\n",t.n,t.ts.ipMittente,t.ts.portaMittente,t.ts.ipDestinatario,t.ts.portaDestinatario,t.ts.credito,t.ts.numRandom);
+                }
+
+                printf("\nRichiesta conclusa.\n");	
                 break;
+
             default:
                 printf("Opzione non prevista\n");
                 break;
         }
+
 
         printf("[1] Continui ad usufruire del servizio\n[0]Esci\nScelta: ");
         scanf("%d", &check);
