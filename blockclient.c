@@ -40,7 +40,7 @@ int main(int argc, char* argv[])
     {
         printf("BLOCK CLIENT: Scegli un operazione da effettuare sull'attuale blockchain\n");
         printf("[1] Visualizzare le ultime n transazioni\n[2] Visualizzare una generica transazione\n");
-        printf("[3] Visualizzare la somma dei valori di tutta la blockchain\n[4] Cercare il numero di transazioni di un indirizzo specifico\n[5] Cercare tutte le transazioni di un indirizzo specifico\n");
+        printf("[3] Visualizzare la somma dei valori di tutta la blockchain\n[4] Cercare il numero di transazioni di un indirizzo specifico\n[5] Cercare tutte le transazioni di un indirizzo specifico\n[6] Visualizzare il bilancio delle transazioni di un indirizzo specifico\n");
         printf("Scelta: ");
         scanf("%d", &scelta);
         printf("\n");
@@ -125,7 +125,7 @@ int main(int argc, char* argv[])
 
                 break;
             case 5:
-		        printf("Inserire l'indirizzo IP: ");
+		printf("Inserire l'indirizzo IP: ");
                 scanf("%s", ip);
                 printf("\nInserire la porta: ");
                 scanf("%d", &porta);
@@ -150,7 +150,21 @@ int main(int argc, char* argv[])
 
                 printf("\nRichiesta conclusa.\n");	
                 break;
-
+	    case 6:
+		printf("Inserire l'indirizzo IP: ");
+                scanf("%s", ip);
+                printf("\nInserire la porta: ");
+                scanf("%d", &porta);
+                printf("\n");
+                FullWrite(sock, &ip, sizeof(ip));
+	 	FullWrite(sock, &porta, sizeof(int));
+		if( Fullread(sock,&n,sizeof(int)) == -1)
+		{
+		    perror("Connessione persa");
+                    exit(1);
+		}
+		printf("Bilancio delle transazioni dell'indirizzo desiderato: %d\n",&n);
+		break;
             default:
                 printf("Opzione non prevista\n");
                 break;
