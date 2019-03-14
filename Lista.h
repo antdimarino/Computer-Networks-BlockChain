@@ -50,10 +50,7 @@ blocco* getBlocco(int i, blocco* genesi)
     for(j = 0; j<i; j++)
     {
         if(temp->next == NULL)
-        {
-            temp->n = -1;
-            return temp;
-        }
+            return NULL;
         temp = temp->next;
     }
 
