@@ -19,6 +19,7 @@ void* gestoreClient(void* arg);
 int sommaCredito(blocco *genesi);
 int sommaTransazioni(char ip[], int porta, blocco* genesi);
 void signalHandler(int segnaleRicevuto);
+int calcolaBilancio(char ip[], int porta);
 
 int main(int argc, char* argv[])
 {
@@ -264,14 +265,29 @@ void* gestoreClient(void* arg)
                 n = 0;
                 FullWrite(sock,&n,sizeof(int));
                 break;
+				case 6:
+				sum=0;
+				if ( FullRead(sock, &ip, sizeof(ip)) == -1)
+                {
+                    printf("THREAD GESTORE-CLIENT: Connessione persa\n");
+                    pthread_exit(NULL);
+                }
 
+                if ( FullRead(sock, &porta, sizeof(int)) == -1)
+                {
+                    printf("THREAD GESTORE-CLIENT: Connessione persa\n");
+                    pthread_exit(NULL);
+                }
+               	sum=calcolaBilancio(ip,porta);
+				FullWrite(sock,&sum,sizeof(int));
+				break;
             default:
 
                 printf("Opzione non prevista");
 
                 break;
         }
-
+		    
         if( FullRead(sock, &check, sizeof(int)) == -1)
         {
             printf("THREAD GESTORE-CLIENT: Connessione persa\n");
@@ -361,6 +377,22 @@ int sommaCredito(blocco* genesi)
     return sum;    
 }
 
+int calcolaBilancio(char ip[], int porta)
+{
+                blocco* blTemp = genesi;
+				int sum=0;
+				while(blTemp->next != NULL)
+				{
+					blTemp = blTemp->next;
+					if(strcmp(blTemp->ts.ipMittente, ip) == 0 && blTemp->ts.portaMittente == porta)
+						 sum-=blTemp->ts.credito;
+					else
+						if(strcmp(blTemp->ts.ipDestinatario, ip) == 0 && blTemp->ts.portaDestinatario == porta)
+							sum+=blTemp->ts.credito;	
+				}
+ return sum;
+}
+
 int sommaTransazioni(char ip[], int porta, blocco* genesi)
 {
     blocco *bl = genesi;
@@ -385,4 +417,3 @@ void signalHandler(int segnaleRicevuto)
         perror("could not create thread");
     }
 }
-
