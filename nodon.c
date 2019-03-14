@@ -141,7 +141,7 @@ int main(int argc, char* argv[])
 
 
             nread = FullRead(conn_fd, &check, sizeof(int));
-            if(  check != 1 || nread == -1 ) 
+            if(  check == 0 || nread == -1 ) 
             {  
                 printf("NODON: Il BlockServer ha interrotto la connessione!\n");
                 close(conn_fd);
