@@ -11,13 +11,14 @@ int pid;
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t ter = PTHREAD_MUTEX_INITIALIZER;
 pthread_t tidOttieniNodi;
+pthread_attr_t att;
 int numBlocchi;
 int enable = 1;
 
 void* ottieniNodi(void* arg);
 void* gestoreClient(void* arg);
 int sommaCredito(blocco *genesi);
-int sommaTransazioni(char ip[], int porta, blocco* genesi);
+int sommaTransazioni(char ip[], int porta);
 void signalHandler(int segnaleRicevuto);
 int calcolaBilancio(char ip[], int porta);
 
@@ -33,6 +34,8 @@ int main(int argc, char* argv[])
     struct sockaddr_in server;
 
     pthread_t *tid = (pthread_t*)calloc(dimAr, sizeof(pthread_t));
+    pthread_attr_init(&att);
+    pthread_attr_setdetachstate(&att, PTHREAD_CREATE_DETACHED);
 
     if(argc < 2)
     {
@@ -100,7 +103,7 @@ int main(int argc, char* argv[])
         
         printf("Connessione accettata\n");
 
-        if( (pthread_create(&tid[i], NULL, gestoreClient, (void* ) &client[i]) )  < 0) 
+        if( (pthread_create(&tid[i], att, gestoreClient, (void* ) &client[i]) )  < 0) 
         {
             perror("could not create thread");
             return 1;
@@ -201,12 +204,15 @@ void* gestoreClient(void* arg)
                 break;
 
             case 3:
+                sum = 0;
                 sum = sommaCredito(genesi);
 
                 FullWrite(sock, &sum, sizeof(int));            
                 break;
 
             case 4:
+                sum = 0;
+
                 if( FullRead(sock, &ip, sizeof(ip)) == -1)
                 {
                     printf("THREAD GESTORE-CLIENT: Connessione persa\n");
@@ -265,8 +271,11 @@ void* gestoreClient(void* arg)
                 n = 0;
                 FullWrite(sock,&n,sizeof(int));
                 break;
-				case 6:
-				sum=0;
+
+            case 6:
+
+				sum = 0;
+
 				if ( FullRead(sock, &ip, sizeof(ip)) == -1)
                 {
                     printf("THREAD GESTORE-CLIENT: Connessione persa\n");
@@ -278,16 +287,20 @@ void* gestoreClient(void* arg)
                     printf("THREAD GESTORE-CLIENT: Connessione persa\n");
                     pthread_exit(NULL);
                 }
-               	sum=calcolaBilancio(ip,porta);
-				FullWrite(sock,&sum,sizeof(int));
-				break;
+
+               	sum = calcolaBilancio(ip, porta);
+
+				FullWrite(sock, &sum, sizeof(int));
+
+				break;            
+
             default:
 
                 printf("Opzione non prevista");
 
                 break;
         }
-		    
+
         if( FullRead(sock, &check, sizeof(int)) == -1)
         {
             printf("THREAD GESTORE-CLIENT: Connessione persa\n");
@@ -377,23 +390,7 @@ int sommaCredito(blocco* genesi)
     return sum;    
 }
 
-int calcolaBilancio(char ip[], int porta)
-{
-                blocco* blTemp = genesi;
-				int sum=0;
-				while(blTemp->next != NULL)
-				{
-					blTemp = blTemp->next;
-					if(strcmp(blTemp->ts.ipMittente, ip) == 0 && blTemp->ts.portaMittente == porta)
-						 sum-=blTemp->ts.credito;
-					else
-						if(strcmp(blTemp->ts.ipDestinatario, ip) == 0 && blTemp->ts.portaDestinatario == porta)
-							sum+=blTemp->ts.credito;	
-				}
- return sum;
-}
-
-int sommaTransazioni(char ip[], int porta, blocco* genesi)
+int sommaTransazioni(char ip[], int porta)
 {
     blocco *bl = genesi;
     int sum = 0;
@@ -416,4 +413,23 @@ void signalHandler(int segnaleRicevuto)
     {
         perror("could not create thread");
     }
+}
+
+
+int calcolaBilancio(char ip[], int porta)
+{
+    blocco* blTemp = genesi;
+    int sum=0;
+
+	while(blTemp->next != NULL)
+	{
+		blTemp = blTemp->next;
+
+		if( strcmp(blTemp->ts.ipMittente, ip) == 0 && blTemp->ts.portaMittente == porta )
+		    sum-=blTemp->ts.credito;
+		else if( strcmp(blTemp->ts.ipDestinatario, ip) == 0 && blTemp->ts.portaDestinatario == porta )
+			sum+=blTemp->ts.credito;	
+	}
+
+    return sum;
 }
