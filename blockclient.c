@@ -17,7 +17,7 @@ int main(int argc, char* argv[])
 
     if(argc <2)
     {
-        perror("Input error: add an address");
+        printf("Input error: add an address");
         exit(1);
     }
 
@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
     serv_add.sin_port = htons(2000);
 
     if ( (inet_pton(AF_INET, argv[1], &serv_add.sin_addr)) <= 0) {
-		perror("Address creation error");
+		printf("Address creation error");
 		return 1;
     }
 
@@ -38,9 +38,10 @@ int main(int argc, char* argv[])
 
     do
     {
-        printf("BLOCK CLIENT: Scegli un operazione da effettuare sull'attuale blockchain\n");
+        printf("\nBLOCK CLIENT: Scegli un operazione da effettuare sull'attuale blockchain\n");
         printf("[1] Visualizzare le ultime n transazioni\n[2] Visualizzare una generica transazione\n");
         printf("[3] Visualizzare la somma dei valori di tutta la blockchain\n[4] Cercare il numero di transazioni di un indirizzo specifico\n[5] Cercare tutte le transazioni di un indirizzo specifico\n[6] Visualizzare il bilancio delle transazioni di un indirizzo specifico\n");
+        printf("[0] Esci\n");
         printf("Scelta: ");
         scanf("%d", &scelta);
         printf("\n");
@@ -50,8 +51,7 @@ int main(int argc, char* argv[])
         switch (scelta)
         {
             case 1:
-                printf("Da quale identificativo vuoi visualizzare le transazioni?");
-                printf("Scelta: ");
+                printf("Inserire il valore di n: ");
                 scanf("%d", &n);
                 printf("\n");
 
@@ -59,18 +59,18 @@ int main(int argc, char* argv[])
 
                 if ( FullRead(sock, &n, sizeof(int)) == -1)
                 {
-                    perror("Connessione persa");
+                    printf("Connessione persa");
                     exit(1);
                 }
 
                 if( n == -1 )
-                    printf("Questo blocco non e presente nella blockchain\n");
+                    printf("I blocchi richiesti non sono presenti nella blockchain\n");
             
                 for(i = 0; i<n; i++)
                 {
                     if( FullRead(sock, &t, sizeof(struct temp)) == -1)
                     {
-                        perror("Connessione persa");
+                        printf("Connessione persa");
                         exit(1);
                     }
 
@@ -87,10 +87,24 @@ int main(int argc, char* argv[])
 
                 FullWrite(sock, &n, sizeof(int));
 
-                if( FullRead(sock, &t, sizeof(struct temp)) == -1)
+                if( FullRead(sock, &n, sizeof(int)) == -1)
                 {
-                    perror("Connessione persa");
+                    printf("Connessione persa");
                     exit(1);
+                }
+
+                if( n == -1)
+                {
+                    printf("Blocco non presente nella BlockChain\n");
+                    break;
+                }
+                else
+                {
+                    if( FullRead(sock, &t, sizeof(struct temp)) == -1)
+                    {
+                        printf("Connessione persa");
+                        exit(1);
+                    }            
                 }
 
                 printf("n = %d\ntempo = %d\nIp Destinatario: %s\t Porta: %d\n", t.n,t.tempo, t.ts.ipDestinatario, t.ts.portaDestinatario);
@@ -99,10 +113,16 @@ int main(int argc, char* argv[])
             case 3:
                 if( FullRead(sock, &n, sizeof(int)) == -1)
                 {
-                    perror("Connessione persa");
+                    printf("Connessione persa");
                     exit(1);
                 }
-                printf("La somma dei valori di tutte le attuali transazioni = %d\n", n);                
+        
+                if(n == 0)
+                    printf("La somma e' 0 perche' la BlockChain e' vuota e non ci sono transazioni\n");       
+                else
+                    printf("La somma dei valori di tutte le attuali transazioni = %d\n", n);  
+            
+                     
                 break;
             case 4:
                 printf("Inserisci indirizzo IP: ");
@@ -117,7 +137,7 @@ int main(int argc, char* argv[])
 
                 if( FullRead(sock, &n, sizeof(int)) == -1)
                 {
-                    perror("Connessione persa");
+                    printf("Connessione persa");
                     exit(1);
                 }
 
@@ -125,7 +145,7 @@ int main(int argc, char* argv[])
 
                 break;
             case 5:
-		printf("Inserire l'indirizzo IP: ");
+		        printf("Inserire l'indirizzo IP: ");
                 scanf("%s", ip);
                 printf("\nInserire la porta: ");
                 scanf("%d", &porta);
@@ -133,10 +153,13 @@ int main(int argc, char* argv[])
                 FullWrite(sock, &ip, sizeof(ip));
 	 	        FullWrite(sock, &porta, sizeof(int));
 
-                while(FullRead(sock,&n,sizeof(int))!=-1)
+                while(FullRead(sock,&n,sizeof(int)) != -1)
                 {
                     if(n==0)
+                    {
+                        printf("Non ho trovato nessuna transazione con l'indirizzo desiderato\n");
                         break;
+                    }
 
                     if ( FullRead(sock,&t,sizeof(struct temp)) == -1)
                     {
@@ -150,31 +173,51 @@ int main(int argc, char* argv[])
 
                 printf("\nRichiesta conclusa.\n");	
                 break;
-	    case 6:
-		printf("Inserire l'indirizzo IP: ");
+
+            case 6:
+		        printf("Inserire l'indirizzo IP: ");
                 scanf("%s", ip);
+
                 printf("\nInserire la porta: ");
                 scanf("%d", &porta);
                 printf("\n");
+
                 FullWrite(sock, &ip, sizeof(ip));
-	 	FullWrite(sock, &porta, sizeof(int));
-		if( Fullread(sock,&n,sizeof(int)) == -1)
-		{
-		    perror("Connessione persa");
+
+	 	        FullWrite(sock, &porta, sizeof(int));
+
+                if( FullRead(sock, &n, sizeof(int)) == -1)
+		        {
+		            printf("Connessione persa");
                     exit(1);
-		}
-		printf("Bilancio delle transazioni dell'indirizzo desiderato: %d\n",&n);
-		break;
+		        }
+                if( n > 0)
+                {
+                    if( FullRead(sock, &n, sizeof(int)) == -1)
+                    {
+                        printf("Connessione persa");
+                        exit(1);
+                    }
+
+                    printf("Bilancio delle transazioni dell'indirizzo desiderato: %d\n",n);
+                }
+                else
+                    printf("Non e' stato possibile calcolare il bilancio perche' non e' presente nessuna transazione in cui compare quell'indirizzo\n");
+                
+		        break;
+
+            case 0:
+                check = 0;
+                FullWrite(sock, &check, sizeof(int));
+                printf("Si e' terminata la connessione\n");
+                exit(1);
+
             default:
                 printf("Opzione non prevista\n");
                 break;
         }
 
-
-        printf("[1] Continui ad usufruire del servizio\n[0]Esci\nScelta: ");
-        scanf("%d", &check);
-        printf("\n");
-
+        check = 1;
         FullWrite(sock, &check, sizeof(int));
 
     }while (check == 1);
