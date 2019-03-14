@@ -255,6 +255,7 @@ void* gestoreClient(void* arg)
                 }
                     
                 blTemp = genesi;
+                pthread_mutex_lock(&mutex);
                 while(blTemp->next != NULL)
                 {  
                     blTemp = blTemp->next;
@@ -277,6 +278,7 @@ void* gestoreClient(void* arg)
                         }
                     }
                 }
+                pthread_mutex_unlock(&mutex);
 
     
                 n = 0;
@@ -299,6 +301,7 @@ void* gestoreClient(void* arg)
                 sum = 0;
                 count = 0;
                 blTemp = genesi;
+                pthread_mutex_lock(&mutex);
                	while(blTemp->next != NULL)
                 {
                     blTemp = blTemp->next;
@@ -314,6 +317,7 @@ void* gestoreClient(void* arg)
                         count++;
                     }
                 }
+                pthread_mutex_unlock(&mutex);
 
                 if(count > 0)
                 {
@@ -413,6 +417,7 @@ int sommaCredito()
     blocco *bl = genesi;
     int sum = 0;
 
+    pthread_mutex_lock(&mutex);
     if(bl != NULL)
     {
         bl = bl->next;
@@ -422,6 +427,7 @@ int sommaCredito()
             bl = bl->next;
         }
     }
+    pthread_mutex_unlock(&mutex);
 
     return sum;    
 }
@@ -431,12 +437,14 @@ int sommaTransazioni(char ip[], int porta)
     blocco *bl = genesi;
     int sum = 0;
 
+    pthread_mutex_lock(&mutex);
     while( bl != NULL)
     {
         if( (strcmp(bl->ts.ipDestinatario, ip) == 0  && bl->ts.portaDestinatario == porta)  || (strcmp(bl->ts.ipMittente, ip) == 0 && bl->ts.portaMittente == porta) )
             sum++;        
         bl = bl->next;
     }
+    pthread_mutex_unlock(&mutex);
     return sum;
 }
 
