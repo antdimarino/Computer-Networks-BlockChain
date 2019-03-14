@@ -17,10 +17,9 @@ int enable = 1;
 
 void* ottieniNodi(void* arg);
 void* gestoreClient(void* arg);
-int sommaCredito(blocco *genesi);
+int sommaCredito();
 int sommaTransazioni(char ip[], int porta);
 void signalHandler(int segnaleRicevuto);
-int calcolaBilancio(char ip[], int porta);
 
 int main(int argc, char* argv[])
 {
@@ -39,7 +38,7 @@ int main(int argc, char* argv[])
 
     if(argc < 2)
     {
-        perror("Input Error: add an address");
+        printf("Input Error: add an address");
         exit(1);        
     }
     pid = getpid();
@@ -64,7 +63,7 @@ int main(int argc, char* argv[])
 
     if( (fstat(file, &sb)) < 0)
     {
-        perror("fstat error\n");
+        printf("fstat error\n");
         exit(1);
     }
 
@@ -88,7 +87,7 @@ int main(int argc, char* argv[])
 
     if( (pthread_create(&tidOttieniNodi, NULL, ottieniNodi, (void *) &numBlocchi)) < 0) 
     {
-        perror("could not create thread");
+        printf("could not create thread");
         return 1;
     }
 
@@ -103,9 +102,9 @@ int main(int argc, char* argv[])
         
         printf("Connessione accettata\n");
 
-        if( (pthread_create(&tid[i], att, gestoreClient, (void* ) &client[i]) )  < 0) 
+        if( (pthread_create(&tid[i], &att, gestoreClient, (void* ) &client[i]) )  < 0) 
         {
-            perror("could not create thread");
+            printf("could not create thread");
             return 1;
         }
 
@@ -114,13 +113,13 @@ int main(int argc, char* argv[])
         {
             if( (client = (int *)realloc(client, (i+5)*sizeof(int))) == NULL)
             {
-                perror("Memoria insufficiente");
+                printf("Memoria insufficiente");
                 exit(1);
             }                
 
             if( (tid = (pthread_t*)realloc(tid, (i+5)*sizeof(pthread_t))) == NULL)
             {
-                perror("Memoria insufficiente");
+                printf("Memoria insufficiente");
                 exit(1);
             }
 
@@ -144,7 +143,7 @@ void* gestoreClient(void* arg)
     int porta;
     int sum;
     int check;
-    int nread;
+    int nread, count;
 
     do
     {
@@ -166,26 +165,29 @@ void* gestoreClient(void* arg)
                 pthread_mutex_lock(&mutex);
                 if( n <= size)
                 {
-                    sum = 1 + (size - n);
-                    pthread_mutex_unlock(&mutex);    
-                    FullWrite(sock, &sum, sizeof(int));
+                    sum =  1 + size - n;  
 
-                    for(i = 0; i<sum; i++)
+                    FullWrite(sock, &n, sizeof(int)); 
+
+                    for(i = sum; i <= size ; i++)
                     {
 
-                        blTemp = getBlocco(i+n, genesi);
+                        blTemp = getBlocco(i, genesi);
                         t.n = blTemp->n;
                         t.tempo = blTemp->tempo;
                         t.ts = blTemp->ts;
 
-                        FullWrite(sock, &t, sizeof(struct temp));                
-                    }        
+                        FullWrite(sock, &t, sizeof(struct temp));            
+                    }       
+                    pthread_mutex_unlock(&mutex);  
                 }
                 else
                 {
+                    pthread_mutex_unlock(&mutex); 
                     n = -1;
                     FullWrite(sock, &n, sizeof(int));                
                 }
+                
                 break;
 
             case 2:
@@ -195,7 +197,18 @@ void* gestoreClient(void* arg)
                     pthread_exit(NULL);
                 }
 
-                blTemp = getBlocco(n, genesi);
+                if( ( blTemp = getBlocco(n, genesi) ) == NULL)
+                {
+                    n = -1;
+                    FullWrite(sock, &n, sizeof(int));
+                    break;
+                }
+                else
+                {
+                    n = 1;
+                    FullWrite(sock, &n, sizeof(int));
+                }
+                
                 t.n = blTemp->n;
                 t.tempo = blTemp->tempo;
                 t.ts = blTemp->ts;
@@ -204,14 +217,12 @@ void* gestoreClient(void* arg)
                 break;
 
             case 3:
-                sum = 0;
-                sum = sommaCredito(genesi);
+                sum = sommaCredito();
 
                 FullWrite(sock, &sum, sizeof(int));            
                 break;
 
             case 4:
-                sum = 0;
 
                 if( FullRead(sock, &ip, sizeof(ip)) == -1)
                 {
@@ -225,7 +236,7 @@ void* gestoreClient(void* arg)
                     pthread_exit(NULL);
                 }
 
-                sum = sommaTransazioni(ip, porta, genesi);
+                sum = sommaTransazioni(ip, porta);
 
                 FullWrite(sock, &sum, sizeof(int));   
 
@@ -273,9 +284,6 @@ void* gestoreClient(void* arg)
                 break;
 
             case 6:
-
-				sum = 0;
-
 				if ( FullRead(sock, &ip, sizeof(ip)) == -1)
                 {
                     printf("THREAD GESTORE-CLIENT: Connessione persa\n");
@@ -288,9 +296,34 @@ void* gestoreClient(void* arg)
                     pthread_exit(NULL);
                 }
 
-               	sum = calcolaBilancio(ip, porta);
+                sum = 0;
+                count = 0;
+                blTemp = genesi;
+               	while(blTemp->next != NULL)
+                {
+                    blTemp = blTemp->next;
 
-				FullWrite(sock, &sum, sizeof(int));
+                    if( strcmp(blTemp->ts.ipMittente, ip) == 0 && blTemp->ts.portaMittente == porta )
+                    {
+                        sum-=blTemp->ts.credito;
+                        count++;
+                    }
+                    else if( strcmp(blTemp->ts.ipDestinatario, ip) == 0 && blTemp->ts.portaDestinatario == porta )
+                    {
+                        sum += blTemp->ts.credito;	
+                        count++;
+                    }
+                }
+
+                if(count > 0)
+                {
+                    FullWrite(sock, &count, sizeof(int));
+                
+                    FullWrite(sock, &sum, sizeof(int));
+                }
+                else
+                    FullWrite(sock, &count, sizeof(int));
+                
 
 				break;            
 
@@ -334,7 +367,7 @@ void* ottieniNodi(void * arg)
     clientNodon.sin_port = htons(1025);
 
     if ( (inet_pton(AF_INET, ip, &clientNodon.sin_addr)) <= 0) {
-		perror("Address creation error");
+		printf("Address creation error");
 		return NULL;
     }
 
@@ -360,7 +393,10 @@ void* ottieniNodi(void * arg)
             size++;
             write(file, &t, sizeof(struct temp));
             printf("THREAD BLOCKSERVER: Blocco ricevuto ed inserito: %d.\n\n", t.n);
-            pthread_mutex_unlock(&mutex);           
+            pthread_mutex_unlock(&mutex);   
+
+            printf("n = %d\ntempo = %d\nIp Destinatario: %s\t Porta: %d\n", t.n,t.tempo, t.ts.ipDestinatario, t.ts.portaDestinatario);
+            printf("Ip Mittente: %s\t Porta Mittente: %d\nCredito: %d\nNumero Randomico: %d\n\n\n\n", t.ts.ipMittente, t.ts.portaMittente, t.ts.credito, t.ts.numRandom);        
         }
 
         FullWrite(socket, &check, sizeof(int));         
@@ -372,7 +408,7 @@ void* ottieniNodi(void * arg)
     pthread_exit(NULL);    
 }
 
-int sommaCredito(blocco* genesi)
+int sommaCredito()
 {
     blocco *bl = genesi;
     int sum = 0;
@@ -411,25 +447,6 @@ void signalHandler(int segnaleRicevuto)
 
     if( (pthread_create(&tidOttieniNodi, NULL, ottieniNodi, (void *) &size)) < 0) 
     {
-        perror("could not create thread");
+        printf("could not create thread");
     }
-}
-
-
-int calcolaBilancio(char ip[], int porta)
-{
-    blocco* blTemp = genesi;
-    int sum=0;
-
-	while(blTemp->next != NULL)
-	{
-		blTemp = blTemp->next;
-
-		if( strcmp(blTemp->ts.ipMittente, ip) == 0 && blTemp->ts.portaMittente == porta )
-		    sum-=blTemp->ts.credito;
-		else if( strcmp(blTemp->ts.ipDestinatario, ip) == 0 && blTemp->ts.portaDestinatario == porta )
-			sum+=blTemp->ts.credito;	
-	}
-
-    return sum;
 }
