@@ -156,10 +156,7 @@ int main(int argc, char* argv[])
                 while(FullRead(sock,&n,sizeof(int)) != -1)
                 {
                     if(n==0)
-                    {
-                        printf("Non ho trovato nessuna transazione con l'indirizzo desiderato\n");
                         break;
-                    }
 
                     if ( FullRead(sock,&t,sizeof(struct temp)) == -1)
                     {
