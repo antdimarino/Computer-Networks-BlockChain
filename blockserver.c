@@ -280,7 +280,6 @@ void* gestoreClient(void* arg)
                 }
                 pthread_mutex_unlock(&mutex);
 
-    
                 n = 0;
                 FullWrite(sock,&n,sizeof(int));
                 break;
