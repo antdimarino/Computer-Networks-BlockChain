@@ -10,11 +10,11 @@ participant "NodoN(Thread GeneraBlocchi)"
 participant File
 
 NodoN -> "NodoN(Thread GeneraBlocchi)": Esegue
-activate NodoN #337ab7
-activate "NodoN(Thread GeneraBlocchi)" #337ab7
+activate NodoN #69bbe2
+activate "NodoN(Thread GeneraBlocchi)" #69bbe2
 
 "NodoN(Thread GeneraBlocchi)" -> File: Apre File
-activate File #337ab7
+activate File #69bbe2
 
 loop forever
 	"NodoN(Thread GeneraBlocchi)" -> File: Scrive Blocco Generato
