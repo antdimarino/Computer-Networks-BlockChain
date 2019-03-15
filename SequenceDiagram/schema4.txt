@@ -4,9 +4,9 @@ skinparam sequence {
 }
 footer Diagramma 4 su 11
 NodoN <- "Blockserver (thread: ottieniNodi)": \t\t\tRichiesta di connessione \t  
-activate NodoN #337ab7
+activate NodoN #69bbe2
 NodoN -> "Blockserver (thread: ottieniNodi)": \t\t\tConnessione accettata \t
-activate "Blockserver (thread: ottieniNodi)" #337ab7
+activate "Blockserver (thread: ottieniNodi)" #69bbe2
 NodoN <- "Blockserver (thread: ottieniNodi)": \tManda il numero dell'ultimo blocco ricevuto \t  
 loop connessione attiva
 		alt se il successivo blocco è nel file
