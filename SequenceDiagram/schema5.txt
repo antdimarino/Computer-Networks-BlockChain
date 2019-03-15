@@ -43,8 +43,8 @@ loop Client vuole restare connesso
 	opt Visualizzare il bilancio delle transazioni di un indirizzo specifico
 		ref over BlockClient, "BlockServer(Thread GestioneClient)": Scelta Sei
 	end
-end
 
-BlockClient -> "BlockServer(Thread GestioneClient)": Check
+	BlockClient -> "BlockServer(Thread GestioneClient)": Check
+end
 
 @enduml
