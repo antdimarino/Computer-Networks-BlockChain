@@ -1,17 +1,20 @@
 @startuml
+skinparam sequence {
+	ArrowColor #186336
+}
 
-footer 5 of 11
+footer Diagramma 5 su 11
 
 participant	BlockServer
 participant 	"BlockServer(Thread GestioneClient)"
 participant	BlockClient
 
 BlockClient -> BlockServer: Richiesta Connessione
-activate BlockServer #4e89e8
-activate BlockClient #4e89e8
+activate BlockServer #337ab7
+activate BlockClient #337ab7
 BlockServer -> BlockClient: Connessione Accettata
 BlockServer -> "BlockServer(Thread GestioneClient)": Lancia
-activate "BlockServer(Thread GestioneClient)" #4e89e8
+activate "BlockServer(Thread GestioneClient)" #337ab7
 
 loop Client vuole restare connesso
 	
