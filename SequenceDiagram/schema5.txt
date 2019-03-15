@@ -1,0 +1,47 @@
+@startuml
+
+footer 5 of 11
+
+participant	BlockServer
+participant 	"BlockServer(Thread GestioneClient)"
+participant	BlockClient
+
+BlockClient -> BlockServer: Richiesta Connessione
+activate BlockServer #4e89e8
+activate BlockClient #4e89e8
+BlockServer -> BlockClient: Connessione Accettata
+BlockServer -> "BlockServer(Thread GestioneClient)": Lancia
+activate "BlockServer(Thread GestioneClient)" #4e89e8
+
+loop Client vuole restare connesso
+	
+	BlockClient -> "BlockServer(Thread GestioneClient)": Invia Scelta
+
+	opt Visualizzare le ultime N transazioni
+		ref over BlockClient, "BlockServer(Thread GestioneClient)": Scelta Uno
+	end
+
+	opt Visualizzare una Generica BlockChain
+		ref over BlockClient, "BlockServer(Thread GestioneClient)": Scelta Due
+	end
+
+	opt Visualizzare la somma dei valori di tutta la Blockchain
+		ref over BlockClient, "BlockServer(Thread GestioneClient)": Scelta Tre
+	end
+
+	opt Cercare il numero di transazioni di un indirizzo specifico
+		ref over BlockClient, "BlockServer(Thread GestioneClient)": Scelta Quattro
+	end
+
+	opt Cercare tutte le transazioni di un indirizzo specifico
+		ref over BlockClient, "BlockServer(Thread GestioneClient)": Scelta Cinque
+	end
+
+	opt Visualizzare il bilancio delle transazioni di un indirizzo specifico
+		ref over BlockClient, "BlockServer(Thread GestioneClient)": Scelta Sei
+	end
+end
+
+BlockClient -> "BlockServer(Thread GestioneClient)": Check
+
+@enduml
