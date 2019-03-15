@@ -17,9 +17,9 @@ activate "NodoN(Thread GeneraBlocchi)" #337ab7
 activate File #337ab7
 
 loop forever
-	"NodoN(Thread GeneraBlocchi)" -> File: Scrive Blocco Prodotto
+	"NodoN(Thread GeneraBlocchi)" -> File: Scrive Blocco Generato
 
-	"NodoN(Thread GeneraBlocchi)" -> NodoN: Invia Blocco Prodotto
+	"NodoN(Thread GeneraBlocchi)" -> NodoN: Invia Blocco Generato
 end
 
 @enduml
