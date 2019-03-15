@@ -1,0 +1,22 @@
+@startuml
+
+footer Page 3 of 11
+
+participant NodoN
+participant "NodoN(Thread GeneraNodi)"
+participant File
+
+NodoN -> "NodoN(Thread GeneraNodi)": Esegue
+activate NodoN #4e89e8
+activate "NodoN(Thread GeneraNodi)" #4e89e8
+
+"NodoN(Thread GeneraNodi)" -> File: Apre File
+activate File #4e89e8
+
+loop forever
+	"NodoN(Thread GeneraNodi)" -> File: Scrive Blocco Prodotto
+
+	"NodoN(Thread GeneraNodi)" -> NodoN: Invia Blocco Prodotto
+end
+
+@enduml
