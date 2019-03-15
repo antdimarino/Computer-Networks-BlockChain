@@ -1,0 +1,26 @@
+@startuml
+skinparam sequence {
+	ArrowColor #186336
+}
+footer Diagramma 4 su 11
+NodoN <- "Blockserver (thread: ottieniNodi)": \t\t\tRichiesta di connessione \t  
+activate NodoN #337ab7
+NodoN -> "Blockserver (thread: ottieniNodi)": \t\t\tConnessione accettata \t
+activate "Blockserver (thread: ottieniNodi)" #337ab7
+NodoN <- "Blockserver (thread: ottieniNodi)": \tManda il numero dell'ultimo blocco ricevuto \t  
+loop connessione attiva
+		alt se il successivo blocco è nel file
+		hnote over NodoN: sleep (tempo del blocco)
+		else
+			opt se il successivo blocco non è ancora disponibile
+			hnote over NodoN: wait (generazione del blocco)
+			
+			end
+		end
+	        NodoN -> "Blockserver (thread: ottieniNodi)" : \t\t\tInvia il successivo blocco
+		NodoN <- "Blockserver (thread: ottieniNodi)" : \t\tRichiedi di continuare il traferimento blocchi\t\t
+	    end
+
+deactivate "Blockserver (thread: ottieniNodi)"
+deactivate NodoN
+@enduml
