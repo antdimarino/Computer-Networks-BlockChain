@@ -10,11 +10,11 @@ participant 	"BlockServer(Thread GestioneClient)"
 participant	BlockClient
 
 BlockClient -> BlockServer: Richiesta Connessione
-activate BlockServer #337ab7
-activate BlockClient #337ab7
+activate BlockServer #69bbe2
+activate BlockClient #69bbe2
 BlockServer -> BlockClient: Connessione Accettata
 BlockServer -> "BlockServer(Thread GestioneClient)": Lancia
-activate "BlockServer(Thread GestioneClient)" #337ab7
+activate "BlockServer(Thread GestioneClient)" #69bbe2
 
 loop Client vuole restare connesso
 	
