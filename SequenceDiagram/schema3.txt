@@ -3,20 +3,20 @@
 footer Page 3 of 11
 
 participant NodoN
-participant "NodoN(Thread GeneraNodi)"
+participant "NodoN(Thread GeneraBlocchi)"
 participant File
 
-NodoN -> "NodoN(Thread GeneraNodi)": Esegue
+NodoN -> "NodoN(Thread GeneraBlocchi)": Esegue
 activate NodoN #4e89e8
-activate "NodoN(Thread GeneraNodi)" #4e89e8
+activate "NodoN(Thread GeneraBlocchi)" #4e89e8
 
-"NodoN(Thread GeneraNodi)" -> File: Apre File
+"NodoN(Thread GeneraBlocchi)" -> File: Apre File
 activate File #4e89e8
 
 loop forever
-	"NodoN(Thread GeneraNodi)" -> File: Scrive Blocco Prodotto
+	"NodoN(Thread GeneraBlocchi)" -> File: Scrive Blocco Prodotto
 
-	"NodoN(Thread GeneraNodi)" -> NodoN: Invia Blocco Prodotto
+	"NodoN(Thread GeneraBlocchi)" -> NodoN: Invia Blocco Prodotto
 end
 
 @enduml
