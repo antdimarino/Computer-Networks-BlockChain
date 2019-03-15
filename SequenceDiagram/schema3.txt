@@ -1,17 +1,20 @@
 @startuml
+skinparam sequence {
+	ArrowColor #186336
+}
 
-footer Page 3 of 11
+footer Diagramma 3 su 11
 
 participant NodoN
 participant "NodoN(Thread GeneraBlocchi)"
 participant File
 
 NodoN -> "NodoN(Thread GeneraBlocchi)": Esegue
-activate NodoN #4e89e8
-activate "NodoN(Thread GeneraBlocchi)" #4e89e8
+activate NodoN #337ab7
+activate "NodoN(Thread GeneraBlocchi)" #337ab7
 
 "NodoN(Thread GeneraBlocchi)" -> File: Apre File
-activate File #4e89e8
+activate File #337ab7
 
 loop forever
 	"NodoN(Thread GeneraBlocchi)" -> File: Scrive Blocco Prodotto
