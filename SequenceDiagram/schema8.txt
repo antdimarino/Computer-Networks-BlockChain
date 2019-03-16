@@ -1,0 +1,20 @@
+@startuml
+skinparam sequence {
+	ArrowColor #186336
+}
+
+footer Diagramma 8 su 11
+
+participant	SommaCredito
+participant	"BlockServer(Thread GestioneClient)"
+participant	BlockClient
+
+"BlockServer(Thread GestioneClient)" -> SommaCredito: Lancia
+activate SommaCredito #69bbe2
+activate "BlockServer(Thread GestioneClient)" #69bbe2
+SommaCredito->"BlockServer(Thread GestioneClient)": Ritorna Somma
+
+"BlockServer(Thread GestioneClient)"->BlockClient: Invio Somma
+activate BlockClient #69bbe2
+
+@enduml

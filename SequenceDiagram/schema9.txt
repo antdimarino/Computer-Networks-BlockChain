@@ -1,0 +1,23 @@
+@startuml
+skinparam sequence {
+	ArrowColor #186336
+}
+
+footer Diagramma 8 su 11
+
+participant	SommaTransazioni
+participant	"BlockServer(Thread GestioneClient)"
+participant	BlockClient
+
+BlockClient->"BlockServer(Thread GestioneClient)": Invio Indirizzo
+activate BlockClient #69bbe2
+activate "BlockServer(Thread GestioneClient)" #69bbe2
+
+"BlockServer(Thread GestioneClient)" -> SommaTransazioni: Lancia
+activate SommaTransazioni #69bbe2
+
+SommaTransazioni->"BlockServer(Thread GestioneClient)": Ritorna Numero di Transazioni in cui e' coinvolto quell'indirizzo
+
+"BlockServer(Thread GestioneClient)"->BlockClient: Invio Numero di Transazioni
+
+@enduml
