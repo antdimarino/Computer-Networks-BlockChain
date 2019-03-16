@@ -9,17 +9,18 @@ participant NodoN
 participant "NodoN(Thread GeneraBlocchi)"
 participant File
 
-NodoN -> "NodoN(Thread GeneraBlocchi)": Esegue
+NodoN -> "NodoN(Thread GeneraBlocchi)": \tEsegue
 activate NodoN #69bbe2
 activate "NodoN(Thread GeneraBlocchi)" #69bbe2
 
-"NodoN(Thread GeneraBlocchi)" -> File: Apre File
+"NodoN(Thread GeneraBlocchi)" -> File: \tApre File
 activate File #69bbe2
 
 loop forever
-	"NodoN(Thread GeneraBlocchi)" -> File: Scrive Blocco Generato
-
-	"NodoN(Thread GeneraBlocchi)" -> NodoN: Invia Blocco Generato
+	"NodoN(Thread GeneraBlocchi)" -> File: Scrive blocco generato
+	opt NodoN attende nuovo blocco
+	"NodoN(Thread GeneraBlocchi)" -> NodoN: il blocco è stato generato
+	end
 end
 
 @enduml
