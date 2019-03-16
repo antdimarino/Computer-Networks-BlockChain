@@ -8,16 +8,16 @@ footer Diagramma 7 su 11
 participant	"BlockServer(Thread GestioneClient)"
 participant	BlockClient
 
-BlockClient -> "BlockServer(Thread GestioneClient)": Invio N(ID blocco da voler visualizzare)
+BlockClient -> "BlockServer(Thread GestioneClient)": Invio ID del blocco da voler visualizzare
 activate "BlockServer(Thread GestioneClient)" #69bbe2
 activate BlockClient #69bbe2
 
-alt Non Trovato
-	"BlockServer(Thread GestioneClient)" -> BlockClient: Invio N = -1
+alt ID non Trovato
+	"BlockServer(Thread GestioneClient)" -> BlockClient: \tBlocco non trovato (-1)
 
-else Trovato
+else ID Trovato
 
-	"BlockServer(Thread GestioneClient)" -> BlockClient: Invio N = 1
-	"BlockServer(Thread GestioneClient)" -> BlockClient: Invio Blocco
+	"BlockServer(Thread GestioneClient)" -> BlockClient: \til Blocco è stato trovato (1)
+	"BlockServer(Thread GestioneClient)" -> BlockClient: \t\tInvio del Blocco
 end
 @enduml
