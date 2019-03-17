@@ -18,6 +18,7 @@ alt ID non Trovato
 else ID Trovato
 
 	"BlockServer(Thread GestioneClient)" -> BlockClient: \til Blocco è stato trovato (1)
-	"BlockServer(Thread GestioneClient)" -> BlockClient: \t\tInvio del Blocco
+	"BlockServer(Thread GestioneClient)" -> BlockClient !: \t\tInvio del Blocco
+	deactivate "BlockServer(Thread GestioneClient)"
 end
 @enduml

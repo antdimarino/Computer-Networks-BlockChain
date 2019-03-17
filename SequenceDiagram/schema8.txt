@@ -4,17 +4,17 @@ skinparam sequence {
 }
 
 footer Diagramma 8 su 11
-
-participant	SommaCredito
-participant	"BlockServer(Thread GestioneClient)"
 participant	BlockClient
+participant	"BlockServer(Thread GestioneClient)"
+participant	SommaCredito
 
-"BlockServer(Thread GestioneClient)" -> SommaCredito: Lancia
+
+
+"BlockServer(Thread GestioneClient)" -> SommaCredito: \t\tLancia
 activate SommaCredito #69bbe2
 activate "BlockServer(Thread GestioneClient)" #69bbe2
-SommaCredito->"BlockServer(Thread GestioneClient)": Ritorna Somma
-
-"BlockServer(Thread GestioneClient)"->BlockClient: Invio Somma
-activate BlockClient #69bbe2
-
+SommaCredito -->"BlockServer(Thread GestioneClient)": \tRitorna Somma
+deactivate SommaCredito
+"BlockServer(Thread GestioneClient)"->BlockClient !!: Invio Somma
+deactivate "BlockServer(Thread GestioneClient)"
 @enduml

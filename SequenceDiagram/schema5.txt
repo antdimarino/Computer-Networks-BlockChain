@@ -18,33 +18,36 @@ activate "BlockServer(Thread GestioneClient)" #69bbe2
 
 loop Client vuole restare connesso
 	
-	BlockClient -> "BlockServer(Thread GestioneClient)": Invia Scelta
+	BlockClient -> "BlockServer(Thread GestioneClient)": \tInvia Scelta
 
-	opt Visualizzare le ultime N transazioni
+	opt Visualizzare le ultime N transazioni (1)
 		ref over BlockClient, "BlockServer(Thread GestioneClient)": Scelta Uno
 	end
 
-	opt Visualizzare una Generica BlockChain
+	opt Visualizzare una transazione specifica (2)
 		ref over BlockClient, "BlockServer(Thread GestioneClient)": Scelta Due
 	end
 
-	opt Visualizzare la somma dei valori di tutta la Blockchain
+	opt Visualizzare la somma del valore di tutte le transazioni (3)
 		ref over BlockClient, "BlockServer(Thread GestioneClient)": Scelta Tre
 	end
 
-	opt Cercare il numero di transazioni di un indirizzo specifico
+	opt Cercare il numero di transazioni in cui è coinvolto un indirizzo specifico (4)
 		ref over BlockClient, "BlockServer(Thread GestioneClient)": Scelta Quattro
 	end
 
-	opt Cercare tutte le transazioni di un indirizzo specifico
+	opt Cercare tutte le transazioni in cui è coinvolto un indirizzo specifico (5)
 		ref over BlockClient, "BlockServer(Thread GestioneClient)": Scelta Cinque
 	end
 
-	opt Visualizzare il bilancio delle transazioni di un indirizzo specifico
+	opt Visualizzare il bilancio delle transazioni in cui è coinvolto indirizzo specifico (6)
 		ref over BlockClient, "BlockServer(Thread GestioneClient)": Scelta Sei
 	end
-
-	BlockClient -> "BlockServer(Thread GestioneClient)": Check
+	opt Terminare servizio (0)
+	
+	BlockClient  -> "BlockServer(Thread GestioneClient)" !! : \tDisconnessione
+	end 
+        deactivate BlockClient 
 end
 
 @enduml

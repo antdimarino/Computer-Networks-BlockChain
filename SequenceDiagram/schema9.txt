@@ -4,20 +4,21 @@ skinparam sequence {
 }
 
 footer Diagramma 8 su 11
-
-participant	SommaTransazioni
-participant	"BlockServer(Thread GestioneClient)"
 participant	BlockClient
+participant	"BlockServer(Thread GestioneClient)"
+participant	SommaTransazioni
 
-BlockClient->"BlockServer(Thread GestioneClient)": Invio Indirizzo
+
+BlockClient->"BlockServer(Thread GestioneClient)": \t\tInvio IP
 activate BlockClient #69bbe2
 activate "BlockServer(Thread GestioneClient)" #69bbe2
+BlockClient->"BlockServer(Thread GestioneClient)": \t\tInvio Porta
 
-"BlockServer(Thread GestioneClient)" -> SommaTransazioni: Lancia
+"BlockServer(Thread GestioneClient)" -> SommaTransazioni: Lancia passandogli IP e Porta
 activate SommaTransazioni #69bbe2
 
-SommaTransazioni->"BlockServer(Thread GestioneClient)": Ritorna Numero di Transazioni in cui e' coinvolto quell'indirizzo
-
-"BlockServer(Thread GestioneClient)"->BlockClient: Invio Numero di Transazioni
-
+SommaTransazioni-->"BlockServer(Thread GestioneClient)": Ritorna il Numero di Transazioni
+deactivate SommaTransazioni
+"BlockServer(Thread GestioneClient)"->BlockClient !!: Invio Numero di Transazioni
+deactivate "BlockServer(Thread GestioneClient)"
 @enduml
