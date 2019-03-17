@@ -176,7 +176,7 @@ int main(int argc, char* argv[])
                         printf("\nTransazione numero= %d\nIp Mittente= %s\t\tporta Mittente= %d\nIp Destinatario= %s\t\tporta Destinatario= %d\nAmmontare= %d\nNumero random= %d\n",t.n,t.ts.ipMittente,t.ts.portaMittente,t.ts.ipDestinatario,t.ts.portaDestinatario,t.ts.credito,t.ts.numRandom);
                 }
 		if(cont==0)
-			printf("L'ndirizzo Ip: %s\tporta: %d  non e' coinvolto in nessuna transazione.\n");
+			printf("L'ndirizzo Ip: %s\tporta: %d  non e' coinvolto in nessuna transazione.\n",ip,porta);
                 printf("\nRichiesta conclusa.\n");	
                 break;
 
