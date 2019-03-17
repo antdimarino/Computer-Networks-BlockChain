@@ -7,7 +7,7 @@ int main(int argc, char* argv[])
     struct sockaddr_in serv_add;
 
     int scelta = 0;
-    int n;
+    int n,cont;
     struct temp t;
     char ip[16];
     int porta;
@@ -159,9 +159,10 @@ int main(int argc, char* argv[])
                 printf("\n");
                 FullWrite(sock, &ip, sizeof(ip));
 	 	        FullWrite(sock, &porta, sizeof(int));
-
+		cont=0;
                 while(FullRead(sock,&n,sizeof(int)) != -1)
                 {
+		    cont++;
                     if(n==0)
                         break;
 
@@ -174,7 +175,8 @@ int main(int argc, char* argv[])
                         FullWrite(sock,&i,sizeof(int));
                         printf("\nTransazione numero= %d\nIp Mittente= %s\t\tporta Mittente= %d\nIp Destinatario= %s\t\tporta Destinatario= %d\nAmmontare= %d\nNumero random= %d\n",t.n,t.ts.ipMittente,t.ts.portaMittente,t.ts.ipDestinatario,t.ts.portaDestinatario,t.ts.credito,t.ts.numRandom);
                 }
-
+		if(cont==0)
+			printf("L'ndirizzo Ip: %s\tporta: %d  non e' coinvolto in nessuna transazione.\n");
                 printf("\nRichiesta conclusa.\n");	
                 break;
 
