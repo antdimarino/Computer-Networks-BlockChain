@@ -1,0 +1,25 @@
+@startuml
+skinparam sequence {
+	ArrowColor #186336
+}
+
+footer Diagramma 10 su 11
+participant	BlockClient
+participant 	"BlockServer(Thread GestioneClient)"
+
+
+
+BlockClient->"BlockServer(Thread GestioneClient)": \t\tInvio IP
+activate BlockClient #69bbe2
+activate "BlockServer(Thread GestioneClient)" #69bbe2
+BlockClient->"BlockServer(Thread GestioneClient)": \t\tInvio Porta
+loop per ogni transazione della blockchain
+opt se l'indirizzo è coinvolto nella transizione
+BlockClient<-"BlockServer(Thread GestioneClient)": \tTransazione trovata (1)
+BlockClient<-"BlockServer(Thread GestioneClient)": \tInvia Transazione
+BlockClient->"BlockServer(Thread GestioneClient)": Transazione ricevuta, prosegui (1)
+end
+end
+BlockClient<-"BlockServer(Thread GestioneClient)" !!: \tTransazioni finite (0)
+deactivate "BlockServer(Thread GestioneClient)"
+@enduml
