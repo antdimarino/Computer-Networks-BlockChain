@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
     int file, i = 0;
     struct stat sb;
     struct temp t;
-    int dimAr = 1;
+    int dimAr = 10;
 
     int list_fd;
     int *client = (int *)calloc(dimAr, sizeof(int));
@@ -64,6 +64,7 @@ int main(int argc, char* argv[])
     if( (fstat(file, &sb)) < 0)
     {
         printf("fstat error\n");
+        close(file);
         exit(1);
     }
 
@@ -74,6 +75,7 @@ int main(int argc, char* argv[])
         if( (FullRead(file, &t, sizeof(struct temp))) == -1)
         {
            printf("NODON: Errore sulla lettura del file\n");
+           close(file);
            exit(1);
         }    
         inserimentoCoda(t, genesi);
@@ -114,13 +116,23 @@ int main(int argc, char* argv[])
             if( (client = (int *)realloc(client, (i+5)*sizeof(int))) == NULL)
             {
                 printf("Memoria insufficiente");
+                close(list_fd);
+                for(i=0;i<dimAr;i++)
+                  close(client[i]);
+                free(client);
+                free(tid);
                 exit(1);
             }                
 
             if( (tid = (pthread_t*)realloc(tid, (i+5)*sizeof(pthread_t))) == NULL)
             {
                 printf("Memoria insufficiente");
-                exit(1);
+                close(list_fd);
+                for(i=0;i<dimAr;i++)
+                  close(client[i]);
+                free(client);
+                free(tid);
+				exit(1);
             }
 
             dimAr += 5;
@@ -150,6 +162,7 @@ void* gestoreClient(void* arg)
         if( (FullRead(sock, &scelta, sizeof(int))) == -1)
         {
             printf("THREAD GESTORE-CLIENT: Connessione persa\n");
+            close(sock);
             pthread_exit(NULL);
         }
 
@@ -159,6 +172,7 @@ void* gestoreClient(void* arg)
                 if( FullRead(sock, &n, sizeof(int)) == -1 )
                 {
                     printf("THREAD GESTORE-CLIENT: Connessione persa\n");
+					close(sock);
                     pthread_exit(NULL);
                 }
 
@@ -194,6 +208,7 @@ void* gestoreClient(void* arg)
                 if( FullRead(sock, &n, sizeof(int)) == -1)
                 {
                     printf("THREAD GESTORE-CLIENT: Connessione persa\n");
+                    close(sock);
                     pthread_exit(NULL);
                 }
 
@@ -227,13 +242,15 @@ void* gestoreClient(void* arg)
                 if( FullRead(sock, &ip, sizeof(ip)) == -1)
                 {
                     printf("THREAD GESTORE-CLIENT: Connessione persa\n");
+                    close(sock);
                     pthread_exit(NULL);
                 }
 
                 if( FullRead(sock, &porta, sizeof(int)) == -1)
                 {
                     printf("THREAD GESTORE-CLIENT: Connessione persa\n");
-                    pthread_exit(NULL);
+                    close(sock);
+					pthread_exit(NULL);
                 }
 
                 sum = sommaTransazioni(ip, porta);
@@ -245,12 +262,14 @@ void* gestoreClient(void* arg)
                 if ( FullRead(sock, &ip, sizeof(ip)) == -1)
                 {
                     printf("THREAD GESTORE-CLIENT: Connessione persa\n");
+                    close(sock);
                     pthread_exit(NULL);
                 }
 
                 if ( FullRead(sock, &porta, sizeof(int)) == -1)
                 {
                     printf("THREAD GESTORE-CLIENT: Connessione persa\n");
+                    close(sock);
                     pthread_exit(NULL);
                 }
                     
@@ -274,6 +293,7 @@ void* gestoreClient(void* arg)
                         if( FullRead(sock, &i, sizeof(int)) == -1)
                         {
                             printf("THREAD GESTORE-CLIENT: Connessione persa\n");
+                            close(sock);
                             pthread_exit(NULL);
                         }
                     }
@@ -285,15 +305,17 @@ void* gestoreClient(void* arg)
                 break;
 
             case 6:
-				if ( FullRead(sock, &ip, sizeof(ip)) == -1)
+		if ( FullRead(sock, &ip, sizeof(ip)) == -1)
                 {
                     printf("THREAD GESTORE-CLIENT: Connessione persa\n");
+                    close(sock);
                     pthread_exit(NULL);
                 }
 
                 if ( FullRead(sock, &porta, sizeof(int)) == -1)
                 {
                     printf("THREAD GESTORE-CLIENT: Connessione persa\n");
+                    close(sock);
                     pthread_exit(NULL);
                 }
 
@@ -328,8 +350,13 @@ void* gestoreClient(void* arg)
                     FullWrite(sock, &count, sizeof(int));
                 
 
-				break;            
+		break;
 
+	case 0:
+                printf("Il client ha deciso di chiudere la connessione\n");
+                close(sock);
+                pthread_exit(NULL);
+		break;
             default:
 
                 printf("Opzione non prevista");
@@ -337,15 +364,7 @@ void* gestoreClient(void* arg)
                 break;
         }
 
-        if( FullRead(sock, &check, sizeof(int)) == -1)
-        {
-            printf("THREAD GESTORE-CLIENT: Connessione persa\n");
-            pthread_exit(NULL);
-        }
-
-    }while(check == 1);
-
-    pthread_exit(NULL);
+    }while(scelta != 0);
 }
 
 void* ottieniNodi(void * arg)
@@ -371,8 +390,9 @@ void* ottieniNodi(void * arg)
 
     if ( (inet_pton(AF_INET, ip, &clientNodon.sin_addr)) <= 0) {
 		printf("Address creation error");
-		return NULL;
-    }
+		close(socket);
+		pthread_exit(NULL);
+		    }
 
     len = sizeof(clientNodon);
 
@@ -406,7 +426,7 @@ void* ottieniNodi(void * arg)
     }
     printf("THREAD OTTIENINODI: Ho perso la connessione con nodon\n");
 
-
+    close(socket);
     kill(pid, SIGUSR1);
     pthread_exit(NULL);    
 }

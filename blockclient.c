@@ -38,10 +38,11 @@ int main(int argc, char* argv[])
 
     do
     {
-        printf("\nBLOCK CLIENT: Scegli un operazione da effettuare sull'attuale blockchain\n");
-        printf("[1] Visualizzare le ultime n transazioni\n[2] Visualizzare una generica transazione\n");
-        printf("[3] Visualizzare la somma dei valori di tutta la blockchain\n[4] Cercare il numero di transazioni di un indirizzo specifico\n[5] Cercare tutte le transazioni di un indirizzo specifico\n[6] Visualizzare il bilancio delle transazioni di un indirizzo specifico\n");
-        printf("[0] Esci\n");
+        printf("\n+---------------------------------------------------------------------------+\n| BLOCK CLIENT: Scegli un operazione da effettuare sull'attuale blockchain: |\n");
+        printf("| [1] Visualizzare le ultime n transazioni                                  |\n| [2] Visualizzare una generica transazione                                 |\n");
+        printf("| [3] Visualizzare la somma dei valori di tutta la blockchain               |\n| [4] Cercare il numero di transazioni di un indirizzo specifico            |\n");
+        printf("| [5] Cercare tutte le transazioni di un indirizzo specifico                |\n| [6] Visualizzare il bilancio delle transazioni di un indirizzo specifico  |\n");
+        printf("| [0] Esci                                                                  |\n+---------------------------------------------------------------------------+\n");
         printf("Scelta: ");
         scanf("%d", &scelta);
         printf("\n");
@@ -60,7 +61,8 @@ int main(int argc, char* argv[])
                 if ( FullRead(sock, &n, sizeof(int)) == -1)
                 {
                     printf("Connessione persa");
-                    exit(1);
+                    close (sock);
+					exit(1);
                 }
 
                 if( n == -1 )
@@ -71,6 +73,7 @@ int main(int argc, char* argv[])
                     if( FullRead(sock, &t, sizeof(struct temp)) == -1)
                     {
                         printf("Connessione persa");
+                        close (sock);
                         exit(1);
                     }
 
@@ -90,6 +93,7 @@ int main(int argc, char* argv[])
                 if( FullRead(sock, &n, sizeof(int)) == -1)
                 {
                     printf("Connessione persa");
+                    close (sock);
                     exit(1);
                 }
 
@@ -103,6 +107,7 @@ int main(int argc, char* argv[])
                     if( FullRead(sock, &t, sizeof(struct temp)) == -1)
                     {
                         printf("Connessione persa");
+                        close (sock);
                         exit(1);
                     }            
                 }
@@ -114,6 +119,7 @@ int main(int argc, char* argv[])
                 if( FullRead(sock, &n, sizeof(int)) == -1)
                 {
                     printf("Connessione persa");
+                    close (sock); 
                     exit(1);
                 }
         
@@ -138,6 +144,7 @@ int main(int argc, char* argv[])
                 if( FullRead(sock, &n, sizeof(int)) == -1)
                 {
                     printf("Connessione persa");
+                    close (sock);
                     exit(1);
                 }
 
@@ -186,13 +193,15 @@ int main(int argc, char* argv[])
                 if( FullRead(sock, &n, sizeof(int)) == -1)
 		        {
 		            printf("Connessione persa");
-                    exit(1);
+                            close (sock);
+                            exit(1);
 		        }
                 if( n > 0)
                 {
                     if( FullRead(sock, &n, sizeof(int)) == -1)
                     {
                         printf("Connessione persa");
+                        close (sock);
                         exit(1);
                     }
 
@@ -204,20 +213,15 @@ int main(int argc, char* argv[])
 		        break;
 
             case 0:
-                check = 0;
-                FullWrite(sock, &check, sizeof(int));
-                printf("Si e' terminata la connessione\n");
-                exit(1);
-
+                printf("Disconnessione dal BlockServer...\n");
+				close (sock);
+				printf("Terminazione\nArrivederci e grazie per aver utilizzato i nostri servizi.\n");
+                return 0;
+				break;
             default:
                 printf("Opzione non prevista\n");
                 break;
         }
 
-        check = 1;
-        FullWrite(sock, &check, sizeof(int));
-
-    }while (check == 1);
-
-    return 0;
+    }while (scelta != 0);
 }

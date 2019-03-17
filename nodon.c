@@ -56,6 +56,8 @@ int main(int argc, char* argv[])
     if( (fstat(file, &sb)) < 0)
     {
         printf("fstat error\n");
+        close(file);
+        close(socket);
         exit(1);
     }
     
@@ -66,6 +68,8 @@ int main(int argc, char* argv[])
        if( (FullRead(file, &t, sizeof(struct temp))) == -1)
        {
            printf("NODON: Errore sulla lettura del file\n");
+           close(file);
+           close(socket);
            exit(1);
        }         
         inserimentoCoda(t, genesi);
@@ -80,6 +84,7 @@ int main(int argc, char* argv[])
     if( (pthread_create(&tid, NULL, produci, NULL)) < 0) 
     {
         printf("could not create thread");
+        close(socket);
         return 1;
     }
 
@@ -95,6 +100,7 @@ int main(int argc, char* argv[])
         if( ( FullRead(conn_fd, &indice, sizeof(int)) ) == -1)
         {
             printf("NODON: Connessione persa\n");
+            close (conn_fd);
             break;
         }
 
@@ -149,7 +155,7 @@ int main(int argc, char* argv[])
             }  
         }
     }
-
+    close (socket);
     sem_close(disp);
     sem_unlink("disp");    
     pthread_join(tid, NULL);
@@ -219,6 +225,6 @@ void *produci(void* arg)
             pthread_mutex_unlock(&mutex);
         
     }
-
+    close (file);
     pthread_exit(NULL);
 }
