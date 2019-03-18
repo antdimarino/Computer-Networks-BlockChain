@@ -83,7 +83,7 @@ int main(int argc, char* argv[])
 
     if( (pthread_create(&tid, NULL, produci, NULL)) < 0) 
     {
-        printf("could not create thread");
+        printf("could not create thread\n");
         close(socket);
         return 1;
     }

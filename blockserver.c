@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
 
     if(argc < 2)
     {
-        printf("Input Error: add an address");
+        printf("Input Error: add an address\n");
         exit(1);        
     }
     pid = getpid();
@@ -89,7 +89,7 @@ int main(int argc, char* argv[])
 
     if( (pthread_create(&tidOttieniNodi, NULL, ottieniNodi, (void *) &numBlocchi)) < 0) 
     {
-        printf("could not create thread");
+        printf("could not create thread\n");
         return 1;
     }
 
@@ -106,7 +106,7 @@ int main(int argc, char* argv[])
 
         if( (pthread_create(&tid[i], &att, gestoreClient, (void* ) &client[i]) )  < 0) 
         {
-            printf("could not create thread");
+            printf("could not create thread\n");
             return 1;
         }
 
@@ -115,7 +115,7 @@ int main(int argc, char* argv[])
         {
             if( (client = (int *)realloc(client, (i+5)*sizeof(int))) == NULL)
             {
-                printf("Memoria insufficiente");
+                printf("Memoria insufficiente\n");
                 close(list_fd);
                 for(i=0;i<dimAr;i++)
                   close(client[i]);
@@ -126,7 +126,7 @@ int main(int argc, char* argv[])
 
             if( (tid = (pthread_t*)realloc(tid, (i+5)*sizeof(pthread_t))) == NULL)
             {
-                printf("Memoria insufficiente");
+                printf("Memoria insufficiente\n");
                 close(list_fd);
                 for(i=0;i<dimAr;i++)
                   close(client[i]);
@@ -359,7 +359,7 @@ void* gestoreClient(void* arg)
 		break;
             default:
 
-                printf("Opzione non prevista");
+                printf("Opzione non prevista\n");
 
                 break;
         }
@@ -389,7 +389,7 @@ void* ottieniNodi(void * arg)
     clientNodon.sin_port = htons(1025);
 
     if ( (inet_pton(AF_INET, ip, &clientNodon.sin_addr)) <= 0) {
-		printf("Address creation error");
+		printf("Address creation error\n");
 		close(socket);
 		pthread_exit(NULL);
 		    }
@@ -474,6 +474,6 @@ void signalHandler(int segnaleRicevuto)
 
     if( (pthread_create(&tidOttieniNodi, NULL, ottieniNodi, (void *) &size)) < 0) 
     {
-        printf("could not create thread");
+        printf("could not create thread\n");
     }
 }

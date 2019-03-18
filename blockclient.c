@@ -17,7 +17,7 @@ int main(int argc, char* argv[])
 
     if(argc <2)
     {
-        printf("Input error: add an address");
+        printf("Input error: add an address\n");
         exit(1);
     }
 
@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
     serv_add.sin_port = htons(2000);
 
     if ( (inet_pton(AF_INET, argv[1], &serv_add.sin_addr)) <= 0) {
-		printf("Address creation error");
+		printf("Address creation error\n");
 		return 1;
     }
 
@@ -38,11 +38,11 @@ int main(int argc, char* argv[])
 
     do
     {
-        printf("\n+---------------------------------------------------------------------------+\n| BLOCK CLIENT: Scegli un operazione da effettuare sull'attuale blockchain: |\n");
-        printf("| [1] Visualizzare le ultime n transazioni                                  |\n| [2] Visualizzare una generica transazione                                 |\n");
-        printf("| [3] Visualizzare la somma dei valori di tutta la blockchain               |\n| [4] Cercare il numero di transazioni di un indirizzo specifico            |\n");
-        printf("| [5] Cercare tutte le transazioni di un indirizzo specifico                |\n| [6] Visualizzare il bilancio delle transazioni di un indirizzo specifico  |\n");
-        printf("| [0] Esci                                                                  |\n+---------------------------------------------------------------------------+\n");
+        printf("\n+--------------------------------------------------------------------------------------------+\n| BLOCK CLIENT: Scegli un operazione da effettuare sull'attuale blockchain:                  |\n");
+        printf("| [1] Visualizzare le ultime n transazioni                                                   |\n| [2] Visualizzare una generica transazione                                                  |\n");
+        printf("| [3] Visualizzare la somma dei valori di tutta la blockchain                                |\n| [4] Cercare il numero di transazioni in cui e' coinvolto un indirizzo specifico            |\n");
+        printf("| [5] Cercare tutte le transazioni in cui e' coinvolto un indirizzo specifico                |\n| [6] Visualizzare il bilancio delle transazioni in cui e' coinvolto un indirizzo specifico  |\n");
+        printf("| [0] Esci                                                                                   |\n+--------------------------------------------------------------------------------------------+\n");
         printf("Scelta: ");
         scanf("%d", &scelta);
         printf("\n");
@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
 
                 if ( FullRead(sock, &n, sizeof(int)) == -1)
                 {
-                    printf("Connessione persa");
+                    printf("Connessione persa\n");
                     close (sock);
 					exit(1);
                 }
@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
                 {
                     if( FullRead(sock, &t, sizeof(struct temp)) == -1)
                     {
-                        printf("Connessione persa");
+                        printf("Connessione persa\n");
                         close (sock);
                         exit(1);
                     }
@@ -106,7 +106,7 @@ int main(int argc, char* argv[])
                 {
                     if( FullRead(sock, &t, sizeof(struct temp)) == -1)
                     {
-                        printf("Connessione persa");
+                        printf("Connessione persa\n");
                         close (sock);
                         exit(1);
                     }            
@@ -118,7 +118,7 @@ int main(int argc, char* argv[])
             case 3:
                 if( FullRead(sock, &n, sizeof(int)) == -1)
                 {
-                    printf("Connessione persa");
+                    printf("Connessione persa\n");
                     close (sock); 
                     exit(1);
                 }
@@ -143,7 +143,7 @@ int main(int argc, char* argv[])
 
                 if( FullRead(sock, &n, sizeof(int)) == -1)
                 {
-                    printf("Connessione persa");
+                    printf("Connessione persa\n");
                     close (sock);
                     exit(1);
                 }
@@ -194,7 +194,7 @@ int main(int argc, char* argv[])
 
                 if( FullRead(sock, &n, sizeof(int)) == -1)
 		        {
-		            printf("Connessione persa");
+		            printf("Connessione persa\n");
                             close (sock);
                             exit(1);
 		        }
@@ -202,7 +202,7 @@ int main(int argc, char* argv[])
                 {
                     if( FullRead(sock, &n, sizeof(int)) == -1)
                     {
-                        printf("Connessione persa");
+                        printf("Connessione persa\n");
                         close (sock);
                         exit(1);
                     }
