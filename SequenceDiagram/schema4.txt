@@ -3,16 +3,22 @@ skinparam sequence {
 	ArrowColor #186336
 }
 footer Diagramma 4 su 11
-NodoN <- "Blockserver (thread: ottieniNodi)": \t\t\tRichiesta di connessione \t  
+"Blockserver (thread: ottieniNodi)" -> NodoN : \t\t\tRichiesta di connessione \t  
 activate NodoN #69bbe2
 NodoN -> "Blockserver (thread: ottieniNodi)": \t\t\tConnessione accettata \t
 activate "Blockserver (thread: ottieniNodi)" #69bbe2
-NodoN <- "Blockserver (thread: ottieniNodi)": \tManda il numero dell'ultimo blocco ricevuto \t  
+NodoN <- "Blockserver (thread: ottieniNodi)": \tManda il numero dell'ultimo blocco ricevuto \t
+
+NodoN -> "getBlocco (Lista.h)": Richiedi Blocco con ID e genesi
+activate "getBlocco (Lista.h)" #69bbe2
+"getBlocco (Lista.h)" --> NodoN: Ritorna il Blocco trovato se presente se no torna NULL
+deactivate "getBlocco (Lista.h)"  
+
 loop connessione attiva
-		alt se il successivo blocco è nel file
+		alt se il successivo blocco Ã¨ nel file
 		hnote over NodoN: sleep (tempo del blocco)
 		else
-			opt se il successivo blocco non è ancora disponibile
+			opt se il successivo blocco non Ã¨ ancora disponibile
 			hnote over NodoN: wait (generazione del blocco)
 			
 			end
