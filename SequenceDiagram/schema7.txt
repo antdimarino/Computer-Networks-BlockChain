@@ -1,12 +1,13 @@
+
 @startuml
 skinparam sequence {
 	ArrowColor #186336
 }
 
 footer Diagramma 7 su 11
-
-participant	"BlockServer(Thread GestioneClient)"
 participant	BlockClient
+participant	"BlockServer(Thread GestioneClient)"
+participant	"getBlocco (Lista.h)"
 
 BlockClient -> "BlockServer(Thread GestioneClient)": Invio ID del blocco da voler visualizzare
 activate "BlockServer(Thread GestioneClient)" #69bbe2
@@ -17,7 +18,11 @@ alt ID non Trovato
 
 else ID Trovato
 
-	"BlockServer(Thread GestioneClient)" -> BlockClient: \til Blocco è stato trovato (1)
+	"BlockServer(Thread GestioneClient)" -> BlockClient: \til Blocco Ã¨ stato trovato (1)
+	"BlockServer(Thread GestioneClient)" -> "getBlocco (Lista.h)": Richiedi Blocco con ID e genesi
+	activate "getBlocco (Lista.h)" #69bbe2
+	"getBlocco (Lista.h)" --> "BlockServer(Thread GestioneClient)": Ritorna il Blocco trovato
+	deactivate "getBlocco (Lista.h)"
 	"BlockServer(Thread GestioneClient)" -> BlockClient !: \t\tInvio del Blocco
 	deactivate "BlockServer(Thread GestioneClient)"
 end
