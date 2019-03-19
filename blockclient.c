@@ -34,7 +34,8 @@ int main(int argc, char* argv[])
 		return 1;
     }
 
-    Connect(sock, (struct sockaddr *) &serv_add, sizeof(serv_add));
+   if( Connect(sock, (struct sockaddr *) &serv_add, sizeof(serv_add)) == -1)
+    exit(-1);
 
     do
     {
@@ -159,24 +160,23 @@ int main(int argc, char* argv[])
                 printf("\n");
                 FullWrite(sock, &ip, sizeof(ip));
 	 	        FullWrite(sock, &porta, sizeof(int));
-		cont=0;
-                while(FullRead(sock,&n,sizeof(int)) != -1)
+                if( FullRead(sock, &n, sizeof(int)) == -1)
                 {
-		    cont++;
-                    if(n==0)
-                        break;
-
+                    printf("Connessione persa\n");
+                            close (sock);
+                            exit(1);
+                }
+                for(i=0;i<n;i++)
+                {
                     if ( FullRead(sock,&t,sizeof(struct temp)) == -1)
                     {
                         printf("Connessione con il Blockserver interrotta\n");
                         break;
                     }
-                        i=1;
-                        FullWrite(sock,&i,sizeof(int));
                         printf("\nTransazione numero= %d\nIp Mittente= %s\t\tporta Mittente= %d\nIp Destinatario= %s\t\tporta Destinatario= %d\nAmmontare= %d\nNumero random= %d\n",t.n,t.ts.ipMittente,t.ts.portaMittente,t.ts.ipDestinatario,t.ts.portaDestinatario,t.ts.credito,t.ts.numRandom);
                 }
-		if(cont==0)
-			printf("L'ndirizzo Ip: %s\tporta: %d  non e' coinvolto in nessuna transazione.\n",ip,porta);
+		        if(n==0)
+                    printf("L'ndirizzo Ip: %s\tporta: %d  non e' coinvolto in nessuna transazione.\n",ip,porta);
                 printf("\nRichiesta conclusa.\n");	
                 break;
 

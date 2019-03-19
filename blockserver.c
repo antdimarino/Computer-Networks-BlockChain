@@ -219,15 +219,17 @@ void* gestoreClient(void* arg)
                     close(sock);
                     pthread_exit(NULL);
                 }
-
+				pthread_mutex_lock(&mutex);
                 if( ( blTemp = getBlocco(n, genesi) ) == NULL)
                 {
+                	pthread_mutex_unlock(&mutex);
                     n = -1;
                     FullWrite(sock, &n, sizeof(int));
                     break;
                 }
                 else
                 {
+                	pthread_mutex_unlock(&mutex);
                     n = 1;
                     FullWrite(sock, &n, sizeof(int));
                 }
@@ -280,7 +282,7 @@ void* gestoreClient(void* arg)
                     close(sock);
                     pthread_exit(NULL);
                 }
-                    
+                count=0;
                 blTemp = genesi;
                 pthread_mutex_lock(&mutex);
                 while(blTemp->next != NULL)
@@ -288,28 +290,21 @@ void* gestoreClient(void* arg)
                     blTemp = blTemp->next;
                     if((strcmp(blTemp->ts.ipDestinatario, ip) == 0 && blTemp->ts.portaDestinatario == porta) || (strcmp(blTemp->ts.ipMittente, ip) == 0 && blTemp->ts.portaMittente == porta) )
                     {
-                        n = 1;
-
-                        FullWrite(sock, &n, sizeof(int));
-
-                        t.n = blTemp->n;
-                        t.tempo = blTemp->tempo;
-                        t.ts = blTemp->ts;
-
-                        FullWrite(sock, &t, sizeof(struct temp));
-
-                        if( FullRead(sock, &i, sizeof(int)) == -1)
-                        {
-                            printf("THREAD GESTORE-CLIENT: Connessione persa\n");
-                            close(sock);
-                            pthread_exit(NULL);
-                        }
+                    	count++;
+                    	tArr=(struct temp *)realloc(tArr,count * sizeof(struct temp));
+                        tArr[count-1].n = blTemp->n;
+                        tArr[count-1].tempo = blTemp->tempo;
+                        tArr[count-1].ts = blTemp->ts;
                     }
                 }
                 pthread_mutex_unlock(&mutex);
 
-                n = 0;
-                FullWrite(sock,&n,sizeof(int));
+                FullWrite(sock,&count,sizeof(int));
+                for(i=0;i<count;i++)
+                	FullWrite(sock,&tArr[i],sizeof(struct temp));
+                if(count==0)
+                	free(tArr);
+
                 break;
 
             case 6:
