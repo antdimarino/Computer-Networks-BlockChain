@@ -150,6 +150,7 @@ void* gestoreClient(void* arg)
     int n;
     int i;
     struct temp t;
+    struct temp *tArr;
     blocco* blTemp;
     char ip[16];
     int porta;
@@ -169,6 +170,7 @@ void* gestoreClient(void* arg)
         switch (scelta)
         {
             case 1:
+
                 if( FullRead(sock, &n, sizeof(int)) == -1 )
                 {
                     printf("THREAD GESTORE-CLIENT: Connessione persa\n");
@@ -181,19 +183,25 @@ void* gestoreClient(void* arg)
                 {
                     sum =  1 + size - n;  
 
+                    tArr = (struct temp *)malloc(sum * sizeof(struct temp));
+
                     FullWrite(sock, &n, sizeof(int)); 
 
-                    for(i = sum; i <= size ; i++)
+                    for(i = 0; i < n ; i++)
                     {
 
-                        blTemp = getBlocco(i, genesi);
-                        t.n = blTemp->n;
-                        t.tempo = blTemp->tempo;
-                        t.ts = blTemp->ts;
+                        blTemp = getBlocco(i+sum, genesi);
 
-                        FullWrite(sock, &t, sizeof(struct temp));            
+                        tArr[i].n = blTemp->n;
+                        tArr[i].tempo = blTemp->tempo;
+                        tArr[i].ts = blTemp->ts;           
                     }       
-                    pthread_mutex_unlock(&mutex);  
+                    pthread_mutex_unlock(&mutex); 
+
+                    for(i = 0; i < n; i++)
+                        FullWrite(sock, &tArr[i], sizeof(struct temp));
+
+                    free(tArr); 
                 }
                 else
                 {
@@ -305,7 +313,7 @@ void* gestoreClient(void* arg)
                 break;
 
             case 6:
-		if ( FullRead(sock, &ip, sizeof(ip)) == -1)
+		        if ( FullRead(sock, &ip, sizeof(ip)) == -1)
                 {
                     printf("THREAD GESTORE-CLIENT: Connessione persa\n");
                     close(sock);
@@ -350,13 +358,14 @@ void* gestoreClient(void* arg)
                     FullWrite(sock, &count, sizeof(int));
                 
 
-		break;
+	    	    break;
 
-	case 0:
+	        case 0:
                 printf("Il client ha deciso di chiudere la connessione\n");
                 close(sock);
                 pthread_exit(NULL);
-		break;
+		        break;
+
             default:
 
                 printf("Opzione non prevista\n");
