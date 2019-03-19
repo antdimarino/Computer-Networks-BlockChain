@@ -1,0 +1,18 @@
+@startuml
+skinparam sequence {
+	ArrowColor #186336
+}
+
+participant NodoN
+participant BlockServer
+participant BlockClient
+BlockServer -> NodoN : \t\tID(int)
+loop
+BlockServer <- NodoN : n,tempo,transazione(int,int,struct)
+BlockServer -> NodoN : \t\tcheck(int)
+end
+loop
+BlockServer <- BlockClient : Scelta(int)
+ref over BlockServer, BlockClient: Gestione Servizio
+end
+@enduml
