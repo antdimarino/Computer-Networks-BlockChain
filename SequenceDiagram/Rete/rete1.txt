@@ -1,4 +1,4 @@
-@startuml
+﻿@startuml
 skinparam sequence {
 	ArrowColor #186336
 }
@@ -13,6 +13,31 @@ BlockServer -> NodoN : \t\tcheck(int)
 end
 loop
 BlockServer <- BlockClient : Scelta(int)
-ref over BlockServer, BlockClient: Gestione Servizio
+loop scelta diverso da 0
+	
+	opt Visualizzare le ultime N transazioni (1)
+		ref over BlockClient, BlockServer: Scelta Uno
+	end
+
+	opt Visualizzare una transazione specifica (2)
+		ref over BlockClient, BlockServer: Scelta Due
+	end
+
+	opt Visualizzare la somma del valore di tutte le transazioni (3)
+		ref over BlockClient, BlockServer: Scelta Tre
+	end
+
+	opt Cercare il numero di transazioni in cui è coinvolto un indirizzo specifico (4)
+		ref over BlockClient, BlockServer: Scelta Quattro
+	end
+
+	opt Cercare tutte le transazioni in cui è coinvolto un indirizzo specifico (5)
+		ref over BlockClient, BlockServer: Scelta Cinque
+	end
+
+	opt Visualizzare il bilancio delle transazioni in cui è coinvolto indirizzo specifico (6)
+		ref over BlockClient, BlockServer: Scelta Sei
+	end
+end
 end
 @enduml
