@@ -4,22 +4,26 @@ skinparam sequence {
 }
 
 footer Diagramma 6 su 11
-participant BlockClient
-participant	"BlockServer(Thread GestioneClient)"
 participant	BlockClient
+participant	"BlockServer(Thread GestioneClient)"
 
-BlockClient -> "BlockServer(Thread GestioneClient)": \t\tRichiedi gli ultimi N blocchi
+
+BlockClient -> "BlockServer(Thread GestioneClient)": Invia N
 activate "BlockServer(Thread GestioneClient)" #69bbe2
 activate BlockClient #69bbe2
+
 alt N <= SIZE
-	"BlockServer(Thread GestioneClient)" -> BlockClient: Gli ultimi N blocchi sono presenti nella blockchain
+
 	loop N times
-		"BlockServer(Thread GestioneClient)" -> BlockClient: \t\t\tInvio i-esimo Blocco
-	end        
+"BlockServer(Thread GestioneClient)"-> "getBlocco (Lista.h)": Richiedi Blocco con ID e genesi
+activate "getBlocco (Lista.h)" #69bbe2
+"getBlocco (Lista.h)" --> "BlockServer(Thread GestioneClient)": Ritorna il Blocco 
+deactivate "getBlocco (Lista.h)" 
+		"BlockServer(Thread GestioneClient)" -> BlockClient: Invio i-esimo Blocco
+	end
 else N > SIZE
-	"BlockServer(Thread GestioneClient)" -> BlockClient !!: \t\tI blocchi richiesti non esistono (-1)
-	deactivate BlockClient
-	deactivate "BlockServer(Thread GestioneClient)"
+	
+	"BlockServer(Thread GestioneClient)" -> BlockClient: Invio N = -1
 end
 
 @enduml
