@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
     {
         if( (FullRead(file, &t, sizeof(struct temp))) == -1)
         {
-           printf("NODON: Errore sulla lettura del file\n");
+           printf("BLOCKSERVER: Errore sulla lettura del file\n");
            close(file);
            exit(1);
         }    
@@ -402,13 +402,13 @@ void* ottieniBlocchi(void * arg)
 
     while( (Connect(socket, (struct sockaddr *)&clientNodon, len)) == -1)
     {
-        printf("Nuovo tentativo di riconnessione tra 10 secondi\n");
+        printf("THREAD OTTIENIBLOCCHI: Nuovo tentativo di riconnessione tra 10 secondi\n");
         sleep(10);
     }
 
 
 
-    printf("BLOCKSERVER: Chiedo al nodon i blocchi dall'indice: %d\n", numBl+1);
+    printf("THREAD OTTIENIBLOCCHI: Chiedo al nodon i blocchi dall'indice: %d\n", numBl+1);
     FullWrite(socket, &numBl, sizeof(int));
 
     while( FullRead(socket, &t, sizeof(struct temp)) != -1 )
@@ -419,7 +419,7 @@ void* ottieniBlocchi(void * arg)
             inserimentoCoda(t, genesi);        
             size++;
             write(file, &t, sizeof(struct temp));
-            printf("THREAD BLOCKSERVER: Blocco ricevuto ed inserito: %d.\n\n", t.n);
+            printf("THREAD OTTIENIBLOCCHI: Blocco ricevuto ed inserito: %d.\n\n", t.n);
             pthread_mutex_unlock(&mutex);   
 
             printf("n = %d\ntempo = %d\nIp Destinatario: %s\t Porta: %d\n", t.n,t.tempo, t.ts.ipDestinatario, t.ts.portaDestinatario);
