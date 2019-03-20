@@ -118,10 +118,8 @@ int main(int argc, char* argv[])
 
             if(indice < numBlocchi) 
             {
-                printf("NODON: Voglio ricevere i blocchi dal file\n");
                 bl = bl->next; 
-		        
-                sleep(bl->tempo);
+		        sleep(bl->tempo);
             }
             else
             {   
