@@ -10,12 +10,12 @@ int terminato;
 int pid;
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t ter = PTHREAD_MUTEX_INITIALIZER;
-pthread_t tidOttieniNodi;
+pthread_t tidOttieniBlocco;
 pthread_attr_t att;
 int numBlocchi;
 int enable = 1;
 
-void* ottieniNodi(void* arg);
+void* ottieniBlocchi(void* arg);
 void* gestoreClient(void* arg);
 int sommaCredito();
 int sommaTransazioni(char ip[], int porta);
@@ -87,7 +87,7 @@ int main(int argc, char* argv[])
     printf("BLOCKSERVER: Numero blocchi presi dal file: %d\n", size);
     stampaLista(genesi); 
 
-    if( (pthread_create(&tidOttieniNodi, NULL, ottieniNodi, (void *) &numBlocchi)) < 0) 
+    if( (pthread_create(&tidOttieniBlocco, NULL, ottieniBlocchi, (void *) &numBlocchi)) < 0) 
     {
         printf("could not create thread\n");
         return 1;
@@ -371,7 +371,7 @@ void* gestoreClient(void* arg)
     }while(scelta != 0);
 }
 
-void* ottieniNodi(void * arg)
+void* ottieniBlocchi(void * arg)
 {
     int numBl = *(int *) arg;
     int socket, len;
@@ -428,7 +428,7 @@ void* ottieniNodi(void * arg)
 
         FullWrite(socket, &check, sizeof(int));         
     }
-    printf("THREAD OTTIENINODI: Ho perso la connessione con nodon\n");
+    printf("THREAD OTTIENIBLOCCHI: Ho perso la connessione con nodon\n");
 
     close(socket);
     kill(pid, SIGUSR1);
@@ -473,10 +473,10 @@ int sommaTransazioni(char ip[], int porta)
 
 void signalHandler(int segnaleRicevuto)
 {
-    pthread_join(tidOttieniNodi, NULL);
+    pthread_join(tidOttieniBlocco, NULL);
 
 
-    if( (pthread_create(&tidOttieniNodi, NULL, ottieniNodi, (void *) &size)) < 0) 
+    if( (pthread_create(&tidOttieniBlocco, NULL, ottieniBlocchi, (void *) &size)) < 0) 
     {
         printf("could not create thread\n");
     }
