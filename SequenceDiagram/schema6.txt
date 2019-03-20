@@ -3,27 +3,21 @@ skinparam sequence {
 	ArrowColor #186336
 }
 
-footer Diagramma 6 su 11
 participant	BlockClient
-participant	"BlockServer(Thread GestioneClient)"
+participant	BlockServer
 
 
-BlockClient -> "BlockServer(Thread GestioneClient)": Invia N
-activate "BlockServer(Thread GestioneClient)" #69bbe2
-activate BlockClient #69bbe2
+BlockClient -> BlockServer:  N(int)
+
 
 alt N <= SIZE
 
 	loop N times
-"BlockServer(Thread GestioneClient)"-> "getBlocco (Lista.h)": Richiedi Blocco con ID e genesi
-activate "getBlocco (Lista.h)" #69bbe2
-"getBlocco (Lista.h)" --> "BlockServer(Thread GestioneClient)": Ritorna il Blocco 
-deactivate "getBlocco (Lista.h)" 
-		"BlockServer(Thread GestioneClient)" -> BlockClient: Invio i-esimo Blocco
+		BlockServer -> BlockClient: n,tempo,transazione(int,int,struct)
 	end
 else N > SIZE
 	
-	"BlockServer(Thread GestioneClient)" -> BlockClient: Invio N = -1
+	BlockServer -> BlockClient: N(int) = -1
 end
 
 @enduml
