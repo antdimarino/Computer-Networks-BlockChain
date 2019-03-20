@@ -369,6 +369,8 @@ void* gestoreClient(void* arg)
         }
 
     }while(scelta != 0);
+	
+	pthread_exit(NULL);
 }
 
 void* ottieniBlocchi(void * arg)
