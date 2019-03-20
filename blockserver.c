@@ -408,7 +408,7 @@ void* ottieniNodi(void * arg)
 
 
 
-    printf("BLOCKSERVER: Chiedo al nodon i blocchi dall'indice: %d\n", numBl);
+    printf("BLOCKSERVER: Chiedo al nodon i blocchi dall'indice: %d\n", numBl+1);
     FullWrite(socket, &numBl, sizeof(int));
 
     while( FullRead(socket, &t, sizeof(struct temp)) != -1 )
