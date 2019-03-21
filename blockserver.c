@@ -369,8 +369,8 @@ void* gestoreClient(void* arg)
         }
 
     }while(scelta != 0);
-	
-	pthread_exit(NULL);
+
+    pthread_exit(NULL);
 }
 
 void* ottieniBlocchi(void * arg)
@@ -394,7 +394,7 @@ void* ottieniBlocchi(void * arg)
     clientNodon.sin_family = AF_INET;
     clientNodon.sin_port = htons(1025);
 
-    if ( (inet_pton(AF_INET, ip, &clientNodon.sin_addr)) <= 0) {
+    if ( (inet_pton(PF_INET, ip, &clientNodon.sin_addr)) <= 0) {
 		printf("Address creation error\n");
 		close(socket);
 		pthread_exit(NULL);
