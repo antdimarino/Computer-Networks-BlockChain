@@ -29,13 +29,13 @@ int main(int argc, char* argv[])
     serv_add.sin_family = AF_INET;
     serv_add.sin_port = htons(2000);
 
-    if ( (inet_pton(AF_INET, argv[1], &serv_add.sin_addr)) <= 0) {
+    if ( (inet_pton(PF_INET, argv[1], &serv_add.sin_addr)) <= 0) {
 		printf("Address creation error\n");
 		return 1;
     }
 
-   if( Connect(sock, (struct sockaddr *) &serv_add, sizeof(serv_add)) == -1)
-    exit(-1);
+    if( Connect(sock, (struct sockaddr *) &serv_add, sizeof(serv_add)) == -1)
+        exit(-1);
 
     do
     {
