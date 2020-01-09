@@ -4,3 +4,5 @@ Educational project realized for the examination of Computer Networks of The Uni
 Authors: Antonio Di Marino, Vincenzo Bevilacqua.
 <br>
 Topic: simulation use of a Blockchain.
+<br>
+Technologies: Threads, Sockets, Semaphores
